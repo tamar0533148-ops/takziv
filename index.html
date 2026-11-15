@@ -1,0 +1,2616 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>מערכת אישית לניהול תקציב ומעקב הוצאות</title>
+  <style>
+    :root {
+      --primary: #0d9488;
+      --primary-dark: #0f766e;
+      --primary-light: #f0fdfa;
+      --indigo: #4f46e5;
+      --bg: #f1f5f9;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --ok-bg: #dcfce7;
+      --ok-text: #166534;
+      --over-bg: #fee2e2;
+      --over-text: #991b1b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Tahoma, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    .hidden { display: none !important; }
+
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: linear-gradient(135deg, #f0fdfa 0%, #e2e8f0 100%);
+    }
+    .login-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 28px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+    .login-logo {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: var(--primary); color: #fff;
+      font-size: 28px; font-weight: 800;
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+    .container { max-width: 1280px; margin: 0 auto; padding: 0 16px; }
+    .header-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo-box {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: var(--primary); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800;
+    }
+    .brand h1 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+    .brand p { margin: 0; font-size: 0.78rem; color: var(--muted); }
+    .user-pill {
+      background: var(--primary-light);
+      color: var(--primary-dark);
+      border: 1px solid #99f6e4;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.76rem;
+      font-weight: 700;
+    }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .btn {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text);
+      padding: 7px 13px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn:hover { background: #e2e8f0; }
+    .btn-sm { padding: 4px 8px; font-size: 0.74rem; }
+    .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-warn { background: #fffbeb; color: #92400e; border-color: #fde68a; }
+    .btn-danger { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+
+    .tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      border: none;
+      background: #f1f5f9;
+      color: #475569;
+      padding: 8px 16px;
+      border-radius: 9px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .tab-btn:hover { background: #e2e8f0; }
+    .tab-btn.active { background: var(--primary); color: #fff; }
+
+    main { padding: 24px 0 48px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      margin-bottom: 20px;
+    }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 20px; }
+    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .kpi {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-right: 5px solid var(--primary);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .kpi.indigo { border-right-color: var(--indigo); }
+    .kpi.ok { border-right-color: #10b981; }
+    .kpi.over { border-right-color: #ef4444; }
+    .kpi.amber { border-right-color: #f59e0b; }
+    .kpi-label { font-size: 0.78rem; color: var(--muted); font-weight: 700; }
+    .kpi-val { font-size: 1.55rem; font-weight: 800; margin: 4px 0; }
+    .kpi-sub { font-size: 0.75rem; color: var(--muted); }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+    th {
+      background: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      text-align: right;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      text-align: right;
+    }
+    tr:hover td { background: #f8fafc; }
+    tr.total-row td { background: #f1f5f9; font-weight: 800; border-top: 2px solid #cbd5e1; }
+
+    .badge-ok { background: var(--ok-bg); color: var(--ok-text); padding: 3px 10px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+    .badge-over { background: var(--over-bg); color: var(--over-text); padding: 3px 10px; border-radius: 999px; font-weight: 700; white-space: nowrap; }
+    .badge-recurring { background: #e0e7ff; color: #3730a3; padding: 2px 7px; border-radius: 6px; font-size: 0.72rem; font-weight: 700; margin-right: 5px; }
+    .badge-installment { background: #fef3c7; color: #92400e; padding: 3px 8px; border-radius: 6px; font-size: 0.74rem; font-weight: 700; white-space: nowrap; display: inline-block; }
+    .badge-single-pay { background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 6px; font-size: 0.74rem; font-weight: 600; white-space: nowrap; display: inline-block; }
+
+    .upload-zone {
+      border: 2px dashed #94a3b8;
+      background: #f8fafc;
+      border-radius: 14px;
+      padding: 32px 20px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+    }
+    input[type="text"], input[type="email"], input[type="password"], input[type="number"], select {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-size: 0.86rem;
+      font-family: inherit;
+      background: #fff;
+    }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.45);
+      display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 100;
+    }
+    .modal-box {
+      background: #fff; border-radius: 16px; max-width: 440px; width: 100%;
+      padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; color: #475569; }
+    .form-group input, .form-group select { width: 100%; }
+
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.82rem; }
+    .bar-label { width: 145px; font-weight: 700; flex-shrink: 0; }
+    .bar-track { flex: 1; background: #e2e8f0; height: 14px; border-radius: 999px; overflow: hidden; }
+    .bar-fill { height: 100%; background: var(--primary); border-radius: 999px; }
+    .bar-val { width: 95px; text-align: left; font-weight: 700; }
+
+    .pie-layout {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+    }
+    .pie-legend {
+      flex: 1;
+      min-width: 210px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      font-size: 0.82rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 4px;
+    }
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+    .unsaved-notice {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-wrapper">
+  <div class="login-card">
+    <div class="login-logo">₪</div>
+    <h2 style="margin:0 0 6px; font-weight:800;">מערכת אישית לניהול תקציב</h2>
+    <p style="margin:0 0 20px; font-size:0.84rem; color:var(--muted);">
+      מרחב נתונים פרטי, מאובטח ונפרד לכל משתמש. הזן כתובת אימייל וקוד אישי כדי להיכנס.
+    </p>
+
+    <form id="loginForm">
+      <div class="form-group" style="text-align:right;">
+        <label>כתובת אימייל (Google / Gmail):</label>
+        <input type="email" id="loginEmailInput" placeholder="name@gmail.com" dir="ltr" style="text-align:left;" required />
+      </div>
+      <div class="form-group" style="text-align:right;">
+        <label>קוד / סיסמה אישית (בכניסה ראשונה הקוד יישמר עבורך):</label>
+        <input type="password" id="loginPasswordInput" placeholder="הזן קוד אישי..." dir="ltr" style="text-align:left;" required />
+      </div>
+
+      <div id="loginErrorMsg" style="color:#b91c1c; font-size:0.82rem; font-weight:700; margin-bottom:10px; min-height:18px;"></div>
+
+      <button type="submit" id="loginSubmitBtn" class="btn btn-primary" style="width:100%; padding:11px; font-size:0.95rem; margin-top:4px;">
+        כניסה למרחב האישי שלי
+      </button>
+    </form>
+
+    <div id="savedProfilesBox" style="margin-top:18px; text-align:right;"></div>
+  </div>
+</div>
+
+<div id="appWrapper" class="hidden">
+  <header>
+    <div class="container">
+      <div class="header-top">
+        <div class="brand">
+          <div class="logo-box">₪</div>
+          <div>
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <h1 id="appTitle">ניהול תקציב ומעקב הוצאות</h1>
+              <span id="activeUserBadge" class="user-pill"></span>
+            </div>
+            <p>מרחב אישי פרטי • למידה אוטומטית של חנויות • מחזור חיוב חודשי מדויק</p>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-warn" id="btnReset">נקה הכל (דף חלק)</button>
+          <button type="button" class="btn" id="btnBackup">גיבוי נתונים</button>
+          <button type="button" class="btn" id="btnRestore">שחזור מגיבוי</button>
+          <input type="file" id="backupInput" accept=".json" class="hidden" />
+          <button type="button" class="btn btn-primary" id="btnExportExcel">ייצוא לאקסל (.xlsx)</button>
+          <button type="button" class="btn btn-danger" id="btnLogout">החלף משתמש / יציאה</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <button type="button" id="tab-dashboard" class="tab-btn active" data-tab="dashboard">סיכום והשוואה</button>
+        <button type="button" id="tab-monthly" class="tab-btn" data-tab="monthly">מעקב חודשי ויעדים</button>
+        <button type="button" id="tab-annual" class="tab-btn" data-tab="annual">הוצאות שנתיות (חגים)</button>
+        <button type="button" id="tab-upload" class="tab-btn" data-tab="upload">העלאת קובץ אשראי / בנק</button>
+        <button type="button" id="tab-settings" class="tab-btn" data-tab="settings">הגדרות קטגוריות ויעדים</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <div id="emptyWelcomeBanner" class="card hidden" style="border-right:5px solid var(--primary); background:#f0fdfa;">
+      <h3 style="margin:0 0 6px; color:var(--primary-dark);">ברוך הבא למרחב האישי שלך! המערכת נקייה ומוכנה להזנת הנתונים שלך.</h3>
+      <p style="margin:0 0 12px; font-size:0.86rem;">
+        כדי להתחיל: טען תבנית קטגוריות בסיסית (או הוסף קטגוריות משלך בלשונית <strong>הגדרות קטגוריות ויעדים</strong>), והעלה קובץ אשראי/בנק בלשונית <strong>העלאת קובץ אשראי / בנק</strong>.
+      </p>
+      <div style="display:flex; flex-wrap:wrap; gap:10px;">
+        <button type="button" class="btn btn-primary" id="btnLoadStarterBanner">טען תבנית קטגוריות בסיסית</button>
+        <button type="button" class="btn" id="btnGoSettings">הגדרת קטגוריות ויום חיוב ידנית</button>
+      </div>
+    </div>
+
+    <section id="view-dashboard">
+      <div class="grid-4" id="kpiCards"></div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0">עוגת התפלגות הוצאות מצטברת לפי קטגוריות</h3>
+          <div id="dashboardPieContainer"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">גרף עמודות - השוואת הוצאות לפי חודשים</h3>
+          <div id="monthsBarsContainer"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">גרף פירוט קטגוריות מצטבר</h3>
+        <div id="categoryBarsContainer"></div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">טבלת השוואה מרוכזת בין חודשים</h3>
+        <div class="table-wrap">
+          <table id="comparisonTable"></table>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-monthly" class="hidden">
+      <div class="card" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px;">
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <label style="font-weight:700;">בחר חודש:</label>
+          <select id="monthSelector"></select>
+          <button type="button" class="btn" id="btnAddMonth">+ הוסף חודש ידנית</button>
+          <button type="button" class="btn btn-danger" id="btnClearCurrentMonth">נקה הוצאות חודש זה בלבד</button>
+        </div>
+        <button type="button" class="btn btn-primary" id="btnAddMonthlyTx">+ הוסף הוצאה ידנית לחודש</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0; color:#0f766e;">הוצאות משתנות (צריכה שוטפת)</h3>
+            <span style="font-size:0.75rem; color:var(--muted);">לחץ על שורה לפירוט ושינוי קטגוריה</span>
+          </div>
+          <div class="table-wrap"><table id="monthlyVarTable"></table></div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h3 style="margin:0; color:#4338ca;">הוצאות קבועות והוראות קבע</h3>
+            <span style="font-size:0.75rem; color:var(--muted);">לחץ על שורה לפירוט ושינוי קטגוריה</span>
+          </div>
+          <div class="table-wrap"><table id="monthlyFixedTable"></table></div>
+        </div>
+      </div>
+
+      <div id="categoryDrilldown" class="card hidden">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+          <h4 style="margin:0;" id="drilldownTitle">פירוט עסקאות</h4>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-primary" id="btnSaveDrilldownChanges">שמור שינויים</button>
+            <button type="button" class="btn" id="btnCloseDrilldown">סגור X</button>
+          </div>
+        </div>
+        <p style="margin:0 0 10px; font-size:0.78rem; color:var(--primary-dark);">
+          * בחר קטגוריה חדשה ולחץ על <strong>שמור שינויים</strong> כדי לעדכן את הטבלה וללמד את המערכת להבא.
+        </p>
+        <div class="table-wrap"><table id="drilldownTable"></table></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0;" id="monthlyPieTitle">עוגת התפלגות הוצאות לחודש הנבחר</h3>
+          <div id="monthlyPieContainer"></div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0;" id="monthlyBarTitle">גרף עמודות הוצאות לחודש הנבחר</h3>
+          <div id="monthlyBarContainer"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-annual" class="hidden">
+      <div class="grid-4" id="annualKpis"></div>
+      <div class="card">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px;">
+          <div>
+            <h3 style="margin:0;">מעקב הוצאות שנתיות ומעגל השנה (חגים)</h3>
+            <p style="margin:2px 0 0; font-size:0.78rem; color:var(--muted);">לחץ על שורת קטגוריה כדי לצפות בפירוט העסקאות ולשנות קטגוריה. ביגוד והנעלה מכחודש וחצי לפני ראש השנה ועד אחרי שמחת תורה, ומכחודש וחצי לפני פסח נכנסים לכאן אוטומטית.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnAddAnnualTx">+ הוסף הוצאה שנתית</button>
+        </div>
+        <div class="table-wrap"><table id="annualTable"></table></div>
+      </div>
+
+      <div id="annualDrilldown" class="card hidden">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+          <h4 style="margin:0;" id="annualDrilldownTitle">פירוט עסקאות שנתיות</h4>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-primary" id="btnSaveAnnualDrilldownChanges">שמור שינויים</button>
+            <button type="button" class="btn" id="btnCloseAnnualDrilldown">סגור X</button>
+          </div>
+        </div>
+        <p style="margin:0 0 10px; font-size:0.78rem; color:var(--primary-dark);">
+          * בחר קטגוריה חדשה ולחץ על <strong>שמור שינויים</strong> כדי לעדכן את הנתונים.
+        </p>
+        <div class="table-wrap"><table id="annualDrilldownTable"></table></div>
+      </div>
+    </section>
+
+    <section id="view-upload" class="hidden">
+      <div class="card">
+        <h3 style="margin:0 0 6px;">העלאת פירוט אשראי או בנק (Excel / CSV)</h3>
+        <p style="font-size:0.84rem; color:var(--muted); margin-top:0;">
+          העלה את קובץ הפירוט כדי לצפות בכל ההוצאות ובקטגוריה שאליה שויכה כל הוצאה. המערכת מזהה אוטומטית עסקאות בתשלומים (1 מתוך Y), משייכת כל הוצאה למחזור החיוב הנכון (מיום החיוב כולל ועד יום החיוב הבא לא כולל), ומסננת הוצאות שכבר הוכנסו בעבר.
+        </p>
+
+        <div style="margin-bottom:14px;">
+          <button type="button" class="btn btn-primary" id="btnChooseFile">בחר קובץ מהמחשב / נייד</button>
+          <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt" class="hidden" />
+        </div>
+
+        <div id="dropZone" class="upload-zone">
+          <div style="font-size:2rem; margin-bottom:6px;">📄</div>
+          <div style="font-weight:800; font-size:1rem;">לחץ כאן לבחירת קובץ או גרור קובץ אקסל / CSV לכאן</div>
+          <div style="font-size:0.8rem; color:var(--muted); margin-top:4px;">תומך בקבצי Excel (.xlsx / .xls) ישירות מחברות האשראי והבנקים ובקבצי CSV</div>
+        </div>
+
+        <div id="uploadStatusMsg" style="margin-top:12px; font-weight:700; font-size:0.9rem;"></div>
+
+        <div id="previewArea" class="hidden" style="margin-top:20px; border-top:1px solid var(--border); padding-top:16px;">
+          <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+            <div>
+              <h4 style="margin:0;" id="previewSummary">תצוגה מקדימה</h4>
+              <span style="font-size:0.78rem; color:var(--muted);">שינויי קטגוריה כאן יישמרו ויילמדו רק לאחר לחיצה על כפתור השמירה והאישור!</span>
+            </div>
+            <button type="button" class="btn btn-primary" id="btnConfirmImport">שמור שינויים והכנס לטבלה החודשית</button>
+          </div>
+          <div class="table-wrap" style="max-height:460px; overflow-y:auto;">
+            <table id="previewTable"></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-settings" class="hidden">
+      <div class="grid-2">
+        <div class="card">
+          <h3 style="margin-top:0;">שם הכותרת של המערכת</h3>
+          <div style="display:flex; gap:10px;">
+            <input type="text" id="familyNameInput" style="flex:1;" />
+            <button type="button" class="btn btn-primary" id="btnSaveTitle">שמור שינויים</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3 style="margin-top:0;">הגדרת יום החיוב החודשי בכרטיס האשראי</h3>
+          <p style="margin:0 0 10px; font-size:0.8rem; color:var(--muted);">
+            כל העסקאות, התשלומים והוראות הקבע מיום חיוב זה (כולל) ועד ליום החיוב הבא (לא כולל) ישויכו לחודש שלפני מועד החיוב (לדוגמה: יום חיוב 10 -> מ-10.09 כולל עד 10.10 לא כולל = ספטמבר).
+          </p>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <label style="font-weight:700;">יום בחודש (1-28):</label>
+            <input type="number" id="settingsBillingDayInput" min="1" max="28" style="width:80px; font-weight:800;" />
+            <button type="button" class="btn btn-primary" id="btnSaveBillingDay">שמור שינויים</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0;">עדכון קוד / סיסמה למרחב האישי</h3>
+        <div style="display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+          <input type="password" id="settingsNewPasswordInput" placeholder="הזן קוד חדש..." dir="ltr" style="width:240px; text-align:left;" />
+          <button type="button" class="btn btn-primary" id="btnSavePassword">שמור שינויים</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+          <div>
+            <h3 style="margin:0;">ניהול קטגוריות, יעדים ומילות מפתח לסיווג אוטומטי</h3>
+            <p style="margin:2px 0 0; font-size:0.78rem; color:var(--muted);">הגדר את הקטגוריות והיעדים שלך. השינויים יישמרו רק לאחר לחיצה על <strong>שמור שינויים</strong>.</p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" class="btn" id="btnLoadStarterSettings">טען תבנית קטגוריות בסיסית</button>
+            <button type="button" class="btn" id="btnAddCat">+ הוסף קטגוריה חדשה</button>
+            <button type="button" class="btn btn-primary" id="btnSaveCategoriesSettings">שמור שינויים</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="categoriesSettingsTable"></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px;">
+          <div>
+            <h3 style="margin:0;">כללים אישיים חופשיים לפיצול או שיוך הוצאות</h3>
+            <p style="margin:2px 0 0; font-size:0.78rem; color:var(--muted);">
+              הגדר בקשות מיוחדות מותאמות אישית לצרכים שלך (לדוגמה: פיצול עסקה מבית עסק מסוים חצי לקטגוריה אחת וחצי לקטגוריה שנייה, או שיוך מלא). לחץ על <strong>שמור שינויים</strong> להחלה.
+            </p>
+          </div>
+          <div style="display:flex; flex-wrap:wrap; gap:8px;">
+            <button type="button" class="btn" id="btnAddCustomRule">+ הוסף כלל אישי</button>
+            <button type="button" class="btn btn-primary" id="btnSaveCustomRules">שמור שינויים</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table id="customRulesTable"></table>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px;">
+          <div>
+            <h3 style="margin:0;">זיכרון חנויות שנלמדו מהבחירות שלך</h3>
+            <p style="margin:2px 0 0; font-size:0.78rem; color:var(--muted);">רשימת בתי העסק ששינית ידנית ושמרת - המערכת תזהה אותם אוטומטית בכל העלאה עתידית.</p>
+          </div>
+          <button type="button" class="btn btn-primary" id="btnSaveLearnedMerchants">שמור שינויים</button>
+        </div>
+        <div class="table-wrap">
+          <table id="learnedMerchantsTable"></table>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div id="txModal" class="modal-backdrop hidden">
+  <div class="modal-box">
+    <h3 style="margin-top:0;">הוספת הוצאה ידנית</h3>
+    <div class="form-group">
+      <label>חודש (לדוגמה: אוקטובר 2026):</label>
+      <input type="text" id="mTxMonth" />
+    </div>
+    <div class="form-group">
+      <label>בית עסק / תיאור ההוצאה:</label>
+      <input type="text" id="mTxMerchant" placeholder="לדוגמה: קניית מזון / ביגוד לחג" />
+    </div>
+    <div class="form-group">
+      <label>סכום (₪):</label>
+      <input type="number" step="0.01" id="mTxAmount" />
+    </div>
+    <div class="form-group">
+      <label>קטגוריה:</label>
+      <select id="mTxCategory"></select>
+    </div>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+      <button type="button" class="btn" id="btnCancelTx">ביטול</button>
+      <button type="button" class="btn btn-primary" id="btnSaveTx">שמור שינויים</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  var HEBREW_MONTHS = [
+    "ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני",
+    "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"
+  ];
+
+  var CHART_COLORS = [
+    "#0d9488", "#4f46e5", "#f59e0b", "#ef4444", "#10b981",
+    "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16", "#f97316",
+    "#6366f1", "#14b8a6", "#eab308", "#e11d48"
+  ];
+
+  var memoryFallback = {};
+  function safeGetItem(key) {
+    try { return window.localStorage.getItem(key); } catch (e) { return memoryFallback[key] || null; }
+  }
+  function safeSetItem(key, val) {
+    memoryFallback[key] = val;
+    try { window.localStorage.setItem(key, val); } catch (e) {}
+  }
+
+  function ensureXlsxLoaded(callback) {
+    if (typeof window.XLSX !== "undefined") {
+      callback(true);
+      return;
+    }
+    var urls = [
+      "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js",
+      "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js",
+      "https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"
+    ];
+    var idx = 0;
+    function tryNext() {
+      if (idx >= urls.length) {
+        callback(false);
+        return;
+      }
+      var s = document.createElement("script");
+      s.src = urls[idx++];
+      s.onload = function() { callback(typeof window.XLSX !== "undefined"); };
+      s.onerror = function() { tryNext(); };
+      document.head.appendChild(s);
+    }
+    tryNext();
+  }
+
+  async function parseXlsxAllSheetsNative(arrayBuffer) {
+    if (typeof DecompressionStream === "undefined") {
+      throw new Error("הדפדפן אינו תומך בפריסת זיפ מובנית");
+    }
+    var view = new DataView(arrayBuffer);
+    var bytes = new Uint8Array(arrayBuffer);
+    var len = bytes.length;
+
+    var eocdOffset = -1;
+    for (var i = len - 22; i >= Math.max(0, len - 65558); i--) {
+      if (view.getUint32(i, true) === 0x06054b50) {
+        eocdOffset = i;
+        break;
+      }
+    }
+    if (eocdOffset === -1) throw new Error("לא נמצא אינדקס תקין בקובץ");
+
+    var cdEntries = view.getUint16(eocdOffset + 10, true);
+    var cdOffset = view.getUint32(eocdOffset + 16, true);
+
+    var filesMap = {};
+    var ptr = cdOffset;
+    var dec = new TextDecoder("utf-8");
+
+    for (var e = 0; e < cdEntries; e++) {
+      if (ptr + 46 > len || view.getUint32(ptr, true) !== 0x02014b50) break;
+      var compMethod = view.getUint16(ptr + 10, true);
+      var compSize = view.getUint32(ptr + 20, true);
+      var fileNameLen = view.getUint16(ptr + 28, true);
+      var extraLen = view.getUint16(ptr + 30, true);
+      var commentLen = view.getUint16(ptr + 32, true);
+      var localHeaderOffset = view.getUint32(ptr + 42, true);
+
+      var fileName = dec.decode(bytes.subarray(ptr + 46, ptr + 46 + fileNameLen));
+      ptr += 46 + fileNameLen + extraLen + commentLen;
+
+      if (fileName === "xl/sharedStrings.xml" || /^xl\/worksheets\/sheet\d+\.xml$/i.test(fileName)) {
+        var lhNameLen = view.getUint16(localHeaderOffset + 26, true);
+        var lhExtraLen = view.getUint16(localHeaderOffset + 28, true);
+        var dataStart = localHeaderOffset + 30 + lhNameLen + lhExtraLen;
+        var compSlice = bytes.subarray(dataStart, dataStart + compSize);
+
+        if (compMethod === 0) {
+          filesMap[fileName] = dec.decode(compSlice);
+        } else if (compMethod === 8) {
+          var ds = new DecompressionStream("deflate-raw");
+          var writer = ds.writable.getWriter();
+          writer.write(compSlice);
+          writer.close();
+          var resp = new Response(ds.readable);
+          filesMap[fileName] = await resp.text();
+        }
+      }
+    }
+
+    var sheetKeys = Object.keys(filesMap).filter(function(k) { return /^xl\/worksheets\/sheet\d+\.xml$/i.test(k); }).sort();
+    if (!sheetKeys.length) throw new Error("לא נמצאו גיליונות נתונים בקובץ");
+
+    var xmlParser = new DOMParser();
+    var sharedStrings = [];
+    if (filesMap["xl/sharedStrings.xml"]) {
+      var ssDoc = xmlParser.parseFromString(filesMap["xl/sharedStrings.xml"], "application/xml");
+      var sis = ssDoc.getElementsByTagName("si");
+      for (var s = 0; s < sis.length; s++) {
+        var ts = sis[s].getElementsByTagName("t");
+        var fullStr = "";
+        for (var t = 0; t < ts.length; t++) fullStr += ts[t].textContent || "";
+        sharedStrings.push(fullStr);
+      }
+    }
+
+    function colLettersToIndex(letters) {
+      var col = 0;
+      for (var c = 0; c < letters.length; c++) {
+        col = col * 26 + (letters.charCodeAt(c) - 64);
+      }
+      return col - 1;
+    }
+
+    var sheetsList = [];
+    for (var sk = 0; sk < sheetKeys.length; sk++) {
+      var sheetDoc = xmlParser.parseFromString(filesMap[sheetKeys[sk]], "application/xml");
+      var rowNodes = sheetDoc.getElementsByTagName("row");
+      var sheetRows = [];
+      for (var r = 0; r < rowNodes.length; r++) {
+        var cNodes = rowNodes[r].getElementsByTagName("c");
+        var rowArr = [];
+        for (var cn = 0; cn < cNodes.length; cn++) {
+          var cellEl = cNodes[cn];
+          var ref = cellEl.getAttribute("r") || "";
+          var colMatch = ref.match(/^([A-Z]+)/);
+          var colIdx = colMatch ? colLettersToIndex(colMatch[1]) : rowArr.length;
+          var cellType = cellEl.getAttribute("t") || "";
+          var valText = "";
+          if (cellType === "inlineStr" || cellType === "str") {
+            var itNodes = cellEl.getElementsByTagName("t");
+            if (itNodes.length) {
+              for (var it = 0; it < itNodes.length; it++) valText += itNodes[it].textContent || "";
+            } else {
+              var vStrNodes = cellEl.getElementsByTagName("v");
+              valText = vStrNodes.length ? (vStrNodes[0].textContent || "") : "";
+            }
+          } else {
+            var vNodes = cellEl.getElementsByTagName("v");
+            var rawV = vNodes.length ? (vNodes[0].textContent || "") : "";
+            if (cellType === "s") {
+              valText = sharedStrings[parseInt(rawV, 10)] || "";
+            } else {
+              valText = rawV !== "" && !isNaN(Number(rawV)) ? Number(rawV) : rawV;
+            }
+          }
+          rowArr[colIdx] = valText;
+        }
+        sheetRows.push(rowArr);
+      }
+      sheetsList.push(sheetRows);
+    }
+    return sheetsList;
+  }
+
+  function createCleanUserState(password) {
+    return {
+      title: "ניהול תקציב ומעקב הוצאות",
+      password: password || "",
+      billingDay: 2,
+      categories: [],
+      customRules: [],
+      months: [],
+      transactions: [],
+      learnedMerchants: {},
+      uploadedFileSignatures: []
+    };
+  }
+
+  var STARTER_CATEGORIES = [
+    { id: "food_bulk", name: "קניות מזון וסופר", type: "variable", target: 0, keywords: "רמי לוי, שופרסל, אושר עד, יש חסד, יוחננוף, ויקטורי, חצי חינם, קרפור, מחסני השוק, סופר, מכולת, צרכניה, מעדניה, קצביה, ירקות, פירות, מאפיה" },
+    { id: "clothing_monthly", name: "ביגוד והנעלה (שוטף)", type: "variable", target: 0, keywords: "פוקס, FOX, זארה, ZARA, קסטרו, רנואר, הודיס, דלתא, גולף, פלייס, H&M, שילב, גלי, נמרוד, אלדו, נעלי, ביגוד, אופנה, הלבשה" },
+    { id: "fuel", name: "דלק", type: "variable", target: 0, keywords: "סונול, פז, YELLOW, דלק, דור אלון, טן, TEN, תדלוק" },
+    { id: "transport", name: "תחבורה", type: "variable", target: 0, keywords: "רב קו, כביש 6, פנגו, סלופארק, רכבת, אגד, קווים, דן, מטרופולין, חניון, מונית" },
+    { id: "food_out", name: "אוכל בחוץ", type: "variable", target: 0, keywords: "פיצה, פלאפל, קפה, ארומה, גרג, רולדין, שווארמה, מסעדה, גלידה" },
+    { id: "general", name: "כללי ובית", type: "variable", target: 0, keywords: "טמבור, חד פעמי, סופר פארם, צעצועים, איקאה, IKEA, מקס סטוק, הום סנטר, אייס, ACE, סטימצקי, צומת ספרים" },
+    { id: "edu", name: "חינוך ולימודים", type: "fixed", target: 0, keywords: "מעון, גן, צהרון, חוג, מוסדות, חינוך, בית ספר, שכר לימוד, אוניברסיטה, מכללה" },
+    { id: "insurance", name: "ביטוחים", type: "fixed", target: 0, keywords: "איילון, AIG, הראל, מגדל, הפניקס, כלל ביטוח, מנורה, ביטוח ישיר, ביטוח" },
+    { id: "health", name: "בריאות", type: "fixed", target: 0, keywords: "כללית, מאוחדת, מכבי, לאומית, בית מרקחת, רופא, שיניים, אופטיקה, משקפיים" },
+    { id: "charity", name: "צדקה ותרומות", type: "fixed", target: 0, keywords: "צדקה, מעשר, תרומה, עמותה" },
+    { id: "telecom", name: "תקשורת, חשמל ואינטרנט", type: "fixed", target: 0, keywords: "סלקום, בזק, חשמל, פרטנר, הוט, HOT, פלאפון, גולן טלקום, אינטרנט" },
+    { id: "home_maint", name: "אחזקת בית", type: "fixed", target: 0, keywords: "ועד בית, ארנונה, מים, עיריית, מועצה, גז, אמישראגז, פזגז, סופרגז" },
+    { id: "annual_clothing_tishrei", name: "ביגוד והנעלה - חגי תשרי ושמחת תורה", type: "annual", target: 0, keywords: "ביגוד תשרי, ביגוד סוכות, ביגוד ראש השנה" },
+    { id: "annual_clothing_pesach", name: "ביגוד והנעלה - חג הפסח", type: "annual", target: 0, keywords: "ביגוד פסח, ביגוד ניסן" },
+    { id: "annual_holidays", name: "הוצאות חגים ומעגל השנה", type: "annual", target: 0, keywords: "סוכה, סכך, אתרוג, לולב, ארבעת המינים, משלוחי מנות, תחפושות, פורים, מצות, הגדה, חנוכיה" },
+    { id: "annual_vacation", name: "חופשה שנתית ואטרקציות", type: "annual", target: 0, keywords: "חופשה, מלון, צימר, נופש, אטרקציה, בריכה, פארק" }
+  ];
+
+  var currentUserEmail = null;
+  var state = null;
+  var pendingImportRows = [];
+  var pendingFileSignature = "";
+
+  var draftCategories = [];
+  var draftCustomRules = [];
+  var draftLearnedMerchants = {};
+
+  function getStorageKey(email) {
+    return "takziv_isolated_user_" + email.trim().toLowerCase();
+  }
+
+  function getKnownUsers() {
+    try {
+      var list = JSON.parse(safeGetItem("takziv_known_users") || "[]");
+      return Array.isArray(list) ? list : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveKnownUser(email, customTitle) {
+    var list = getKnownUsers();
+    var cleanEmail = email.trim().toLowerCase();
+    var existing = list.find(function(u) { return u && u.email === cleanEmail; });
+    if (existing) {
+      if (customTitle) existing.name = customTitle;
+    } else {
+      list.push({ email: cleanEmail, name: customTitle || cleanEmail });
+    }
+    safeSetItem("takziv_known_users", JSON.stringify(list));
+  }
+
+  function renderSavedProfiles() {
+    var list = getKnownUsers();
+    var box = document.getElementById("savedProfilesBox");
+    if (!box) return;
+    if (!list.length) { box.innerHTML = ""; return; }
+    box.innerHTML = '<div style="font-size:0.78rem; font-weight:700; color:var(--muted); margin-bottom:6px;">בחר חשבון קיים (יידרש להזין קוד אישי):</div>';
+    list.forEach(function(u) {
+      if (!u || !u.email) return;
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn";
+      btn.style.cssText = "width:100%; justify-content:space-between; margin-bottom:6px;";
+      btn.innerHTML = '<span>' + (u.name || u.email) + '</span><span style="font-size:0.72rem; color:var(--muted);" dir="ltr">' + u.email + '</span>';
+      btn.onclick = function() {
+        document.getElementById("loginEmailInput").value = u.email;
+        var pwInp = document.getElementById("loginPasswordInput");
+        pwInp.value = "";
+        pwInp.focus();
+      };
+      box.appendChild(btn);
+    });
+  }
+
+  function doTakzivLogin(e) {
+    if (e && typeof e.preventDefault === "function") e.preventDefault();
+    var errEl = document.getElementById("loginErrorMsg");
+    if (errEl) errEl.textContent = "";
+
+    var emailInp = document.getElementById("loginEmailInput");
+    var pwInp = document.getElementById("loginPasswordInput");
+    var email = (emailInp ? emailInp.value : "").trim().toLowerCase();
+    var password = (pwInp ? pwInp.value : "").trim();
+
+    if (!email || email.indexOf("@") === -1) {
+      if (errEl) errEl.textContent = "אנא הזן כתובת אימייל תקינה (כולל @) כדי להיכנס.";
+      return false;
+    }
+    if (!password) {
+      if (errEl) errEl.textContent = "אנא הזן קוד / סיסמה אישית כדי להיכנס למרחב שלך.";
+      return false;
+    }
+
+    var key = getStorageKey(email);
+    var raw = safeGetItem(key);
+
+    if (raw) {
+      try {
+        var parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+          if (parsed.password && parsed.password !== password) {
+            if (errEl) errEl.textContent = "הקוד שהזנת שגוי. נסה שנית.";
+            return false;
+          }
+          state = parsed;
+          if (!state.password) state.password = password;
+          if (!Array.isArray(state.categories)) state.categories = [];
+          if (!Array.isArray(state.customRules)) state.customRules = [];
+          if (!Array.isArray(state.months)) state.months = [];
+          if (!Array.isArray(state.transactions)) state.transactions = [];
+          if (!Array.isArray(state.uploadedFileSignatures)) state.uploadedFileSignatures = [];
+          if (!state.learnedMerchants || typeof state.learnedMerchants !== "object") state.learnedMerchants = {};
+          if (!state.billingDay) state.billingDay = 2;
+          if (!state.title) state.title = "ניהול תקציב ומעקב הוצאות";
+        } else {
+          state = createCleanUserState(password);
+        }
+      } catch (err) {
+        state = createCleanUserState(password);
+      }
+    } else {
+      state = createCleanUserState(password);
+    }
+
+    cleanupEmptyMonths();
+    currentUserEmail = email;
+    saveKnownUser(email, state.title);
+    saveState();
+
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("appWrapper").classList.remove("hidden");
+    document.getElementById("activeUserBadge").textContent = email;
+    syncSettingsBillingDay();
+    switchTab("dashboard");
+    return false;
+  }
+
+  window.doTakzivLogin = doTakzivLogin;
+
+  function logoutUser() {
+    currentUserEmail = null;
+    state = null;
+    document.getElementById("loginPasswordInput").value = "";
+    document.getElementById("appWrapper").classList.add("hidden");
+    document.getElementById("loginScreen").classList.remove("hidden");
+    renderSavedProfiles();
+  }
+
+  function saveState() {
+    if (!currentUserEmail || !state) return;
+    safeSetItem(getStorageKey(currentUserEmail), JSON.stringify(state));
+  }
+
+  function cleanupEmptyMonths() {
+    if (!state || !Array.isArray(state.months)) return;
+    var activeSet = new Set();
+    (state.transactions || []).forEach(function(t) {
+      if (t && t.month) activeSet.add(t.month);
+    });
+    state.months = state.months.filter(function(m) {
+      return activeSet.has(m);
+    });
+  }
+
+  function syncSettingsBillingDay() {
+    if (!state) return;
+    var sInp = document.getElementById("settingsBillingDayInput");
+    if (sInp) sInp.value = Number(state.billingDay) || 2;
+  }
+
+  function normalizeMerchantName(name) {
+    return String(name || "")
+      .replace(/\(חלק [12]\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  function learnMerchantCategory(merchantName, categoryId) {
+    if (!merchantName || !categoryId || !state) return;
+    var norm = normalizeMerchantName(merchantName);
+    if (norm.length < 2) return;
+    if (!state.learnedMerchants) state.learnedMerchants = {};
+    state.learnedMerchants[norm] = categoryId;
+  }
+
+  function fmt(num) {
+    return "₪" + Number(num || 0).toLocaleString("he-IL", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  function parseHebrewMonthLabelToOrder(label) {
+    var parts = String(label || "").trim().split(/\s+/);
+    if (parts.length >= 2) {
+      var mIdx = HEBREW_MONTHS.indexOf(parts[0]);
+      var yr = parseInt(parts[1], 10);
+      if (mIdx !== -1 && !isNaN(yr)) {
+        return yr * 12 + mIdx;
+      }
+    }
+    return -1;
+  }
+
+  function getSortedMonthsDesc() {
+    if (!state || !Array.isArray(state.months)) return [];
+    cleanupEmptyMonths();
+    return state.months.slice().sort(function(a, b) {
+      var oa = parseHebrewMonthLabelToOrder(a);
+      var ob = parseHebrewMonthLabelToOrder(b);
+      if (oa !== -1 && ob !== -1) return ob - oa;
+      if (oa !== -1) return -1;
+      if (ob !== -1) return 1;
+      return String(b).localeCompare(String(a), "he");
+    });
+  }
+
+  function renderPieChart(containerId, items) {
+    var box = document.getElementById(containerId);
+    if (!box) return;
+    var valid = (items || []).filter(function(x) { return x.val > 0; });
+    var total = valid.reduce(function(s, x) { return s + x.val; }, 0);
+    if (!valid.length || total <= 0) {
+      box.innerHTML = '<p style="color:var(--muted); font-size:0.85rem;">אין נתונים להצגת עוגת הוצאות.</p>';
+      return;
+    }
+
+    var size = 210;
+    var cx = size / 2;
+    var cy = size / 2;
+    var r = 88;
+    var startAngle = -Math.PI / 2;
+    var paths = "";
+
+    if (valid.length === 1) {
+      paths = '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="' + CHART_COLORS[0] + '" />';
+    } else {
+      valid.forEach(function(item, idx) {
+        var sliceAngle = (item.val / total) * Math.PI * 2;
+        var endAngle = startAngle + sliceAngle;
+        var x1 = cx + r * Math.cos(startAngle);
+        var y1 = cy + r * Math.sin(startAngle);
+        var x2 = cx + r * Math.cos(endAngle);
+        var y2 = cy + r * Math.sin(endAngle);
+        var largeArc = sliceAngle > Math.PI ? 1 : 0;
+        var color = CHART_COLORS[idx % CHART_COLORS.length];
+        paths += '<path d="M ' + cx + ' ' + cy + ' L ' + x1.toFixed(2) + ' ' + y1.toFixed(2) +
+          ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2) +
+          ' Z" fill="' + color + '" stroke="#ffffff" stroke-width="1.5"></path>';
+        startAngle = endAngle;
+      });
+    }
+
+    var legendHtml = valid.map(function(item, idx) {
+      var color = CHART_COLORS[idx % CHART_COLORS.length];
+      var pct = Math.round((item.val / total) * 100);
+      return '<div class="legend-item">' +
+        '<div style="display:flex; align-items:center; gap:7px;">' +
+          '<span class="legend-swatch" style="background:' + color + ';"></span>' +
+          '<span style="font-weight:700;">' + item.name + '</span>' +
+        '</div>' +
+        '<div style="white-space:nowrap; font-weight:700;">' + fmt(item.val) + ' <span style="color:var(--muted); font-weight:400;">(' + pct + '%)</span></div>' +
+      '</div>';
+    }).join("");
+
+    box.innerHTML = '<div class="pie-layout">' +
+      '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">' + paths + '</svg>' +
+      '<div class="pie-legend">' + legendHtml + '</div>' +
+    '</div>';
+  }
+
+  function switchTab(tab) {
+    if (!state) return;
+    ["dashboard", "monthly", "annual", "upload", "settings"].forEach(function(v) {
+      document.getElementById("view-" + v).classList.add("hidden");
+      document.getElementById("tab-" + v).classList.remove("active");
+    });
+    document.getElementById("view-" + tab).classList.remove("hidden");
+    document.getElementById("tab-" + tab).classList.add("active");
+
+    var banner = document.getElementById("emptyWelcomeBanner");
+    if (state.categories.length === 0 && state.transactions.length === 0) {
+      banner.classList.remove("hidden");
+    } else {
+      banner.classList.add("hidden");
+    }
+
+    syncSettingsBillingDay();
+    if (tab === "dashboard") renderDashboard();
+    if (tab === "monthly") renderMonthly();
+    if (tab === "annual") renderAnnual();
+    if (tab === "settings") {
+      draftCategories = JSON.parse(JSON.stringify(state.categories || []));
+      draftCustomRules = JSON.parse(JSON.stringify(state.customRules || []));
+      draftLearnedMerchants = JSON.parse(JSON.stringify(state.learnedMerchants || {}));
+      renderSettings();
+    }
+  }
+
+  function getCatType(catId) {
+    var c = state.categories.find(function(x) { return x.id === catId; });
+    return c ? c.type : "variable";
+  }
+
+  function renderDashboard() {
+    document.getElementById("appTitle").textContent = state.title;
+    var sortedMonths = getSortedMonthsDesc();
+    var nonAnnualCats = state.categories.filter(function(c) { return c.type !== "annual"; });
+    var totalMonthlyTarget = nonAnnualCats.reduce(function(s, c) { return s + Number(c.target || 0); }, 0);
+
+    var totalSpentAllMonths = 0;
+    sortedMonths.forEach(function(m) {
+      totalSpentAllMonths += state.transactions
+        .filter(function(t) { return t.month === m && getCatType(t.categoryId) !== "annual"; })
+        .reduce(function(s, t) { return s + Number(t.amount); }, 0);
+    });
+    var avgMonthly = sortedMonths.length ? totalSpentAllMonths / sortedMonths.length : 0;
+    var diffAvg = totalMonthlyTarget - avgMonthly;
+
+    var annualCats = state.categories.filter(function(c) { return c.type === "annual"; });
+    var annualTarget = annualCats.reduce(function(s, c) { return s + Number(c.target || 0); }, 0);
+    var annualSpent = state.transactions
+      .filter(function(t) { return getCatType(t.categoryId) === "annual"; })
+      .reduce(function(s, t) { return s + Number(t.amount); }, 0);
+
+    document.getElementById("kpiCards").innerHTML =
+      '<div class="kpi"><div class="kpi-label">ממוצע הוצאות חודשי</div><div class="kpi-val">' + fmt(avgMonthly) + '</div><div class="kpi-sub">מתוך ' + sortedMonths.length + ' חודשים פעילים</div></div>' +
+      '<div class="kpi indigo"><div class="kpi-label">יעד תקציב חודשי כולל</div><div class="kpi-val">' + fmt(totalMonthlyTarget) + '</div><div class="kpi-sub">משתנות + קבועות</div></div>' +
+      '<div class="kpi ' + (diffAvg >= 0 ? 'ok' : 'over') + '"><div class="kpi-label">עמידה ביעד החודשי (ממוצע)</div><div class="kpi-val" style="color:' + (diffAvg >= 0 ? '#166534' : '#991b1b') + '">' + fmt(diffAvg) + '</div><div class="kpi-sub">' + (diffAvg >= 0 ? 'מתחת ליעד' : 'חריגה מעל היעד') + '</div></div>' +
+      '<div class="kpi amber"><div class="kpi-label">תקציב שנתי וחגים</div><div class="kpi-val">' + fmt(annualSpent) + '</div><div class="kpi-sub">מתוך יעד ' + fmt(annualTarget) + '</div></div>';
+
+    var catTotals = nonAnnualCats.map(function(c) {
+      return {
+        name: c.name,
+        val: state.transactions.filter(function(t) { return t.categoryId === c.id; }).reduce(function(s, t) { return s + Number(t.amount); }, 0)
+      };
+    }).filter(function(x) { return x.val > 0; }).sort(function(a, b) { return b.val - a.val; });
+
+    renderPieChart("dashboardPieContainer", catTotals);
+
+    var maxCat = catTotals.length ? catTotals[0].val : 1;
+    document.getElementById("categoryBarsContainer").innerHTML = catTotals.length
+      ? catTotals.map(function(x, idx) {
+          var color = CHART_COLORS[idx % CHART_COLORS.length];
+          return '<div class="bar-row"><div class="bar-label">' + x.name + '</div><div class="bar-track"><div class="bar-fill" style="width:' + Math.round((x.val/maxCat)*100) + '%; background:' + color + ';"></div></div><div class="bar-val">' + fmt(x.val) + '</div></div>';
+        }).join("")
+      : '<p style="color:var(--muted); font-size:0.85rem;">הטבלה ריקה - טרם הוזנו הוצאות.</p>';
+
+    var monthTotals = sortedMonths.map(function(m) {
+      return {
+        name: m,
+        val: state.transactions.filter(function(t) { return t.month === m && getCatType(t.categoryId) !== "annual"; }).reduce(function(s, t) { return s + Number(t.amount); }, 0)
+      };
+    });
+    var maxMonth = monthTotals.length ? Math.max.apply(null, monthTotals.map(function(x) { return x.val; }).concat([1])) : 1;
+    document.getElementById("monthsBarsContainer").innerHTML = monthTotals.length
+      ? monthTotals.map(function(x) {
+          return '<div class="bar-row"><div class="bar-label">' + x.name + '</div><div class="bar-track"><div class="bar-fill" style="width:' + Math.round((x.val/maxMonth)*100) + '%; background:var(--indigo);"></div></div><div class="bar-val">' + fmt(x.val) + '</div></div>';
+        }).join("")
+      : '<p style="color:var(--muted); font-size:0.85rem;">טרם הוזנו חודשים.</p>';
+
+    var html = '<thead><tr><th>קטגוריה</th><th>סוג</th>';
+    sortedMonths.forEach(function(m) { html += '<th>' + m + '</th>'; });
+    html += '<th>סהכ</th><th>ממוצע חודשי</th></tr></thead><tbody>';
+
+    if (!nonAnnualCats.length) {
+      html += '<tr><td colspan="4" style="color:var(--muted); text-align:center;">אין קטגוריות מוגדרות עדיין. עבור ללשונית הגדרות קטגוריות ויעדים.</td></tr>';
+    } else {
+      nonAnnualCats.forEach(function(cat) {
+        var rowSum = 0;
+        var cells = "";
+        sortedMonths.forEach(function(m) {
+          var val = state.transactions.filter(function(t) { return t.month === m && t.categoryId === cat.id; }).reduce(function(s, t) { return s + Number(t.amount); }, 0);
+          rowSum += val;
+          cells += '<td>' + fmt(val) + '</td>';
+        });
+        var avg = sortedMonths.length ? rowSum / sortedMonths.length : 0;
+        html += '<tr><td style="font-weight:700;">' + cat.name + '</td><td>' + (cat.type === 'variable' ? 'משתנה' : 'קבועה') + '</td>' + cells + '<td style="font-weight:700;">' + fmt(rowSum) + '</td><td>' + fmt(avg) + '</td></tr>';
+      });
+    }
+    html += '</tbody>';
+    document.getElementById("comparisonTable").innerHTML = html;
+  }
+
+  function renderMonthly() {
+    var sel = document.getElementById("monthSelector");
+    var prev = sel.value;
+    var sortedMonths = getSortedMonthsDesc();
+    if (!sortedMonths.length) {
+      sel.innerHTML = '<option value="">אין חודשים עדיין</option>';
+    } else {
+      var selectedMonth = sortedMonths.indexOf(prev) !== -1 ? prev : sortedMonths[0];
+      sel.innerHTML = sortedMonths.map(function(m) {
+        return '<option value="' + m + '" ' + (m === selectedMonth ? 'selected' : '') + '>' + m + '</option>';
+      }).join("");
+    }
+    var activeMonth = sel.value;
+    buildMonthlyTable("variable", activeMonth, "monthlyVarTable");
+    buildMonthlyTable("fixed", activeMonth, "monthlyFixedTable");
+    renderMonthlyCharts(activeMonth);
+  }
+
+  function renderMonthlyCharts(month) {
+    document.getElementById("monthlyPieTitle").textContent = "עוגת התפלגות הוצאות" + (month ? " - " + month : "");
+    document.getElementById("monthlyBarTitle").textContent = "גרף עמודות הוצאות" + (month ? " - " + month : "");
+
+    if (!month) {
+      renderPieChart("monthlyPieContainer", []);
+      document.getElementById("monthlyBarContainer").innerHTML = '<p style="color:var(--muted); font-size:0.85rem;">אין נתונים להצגה.</p>';
+      return;
+    }
+
+    var nonAnnualCats = state.categories.filter(function(c) { return c.type !== "annual"; });
+    var items = nonAnnualCats.map(function(c) {
+      return {
+        name: c.name,
+        val: state.transactions.filter(function(t) { return t.month === month && t.categoryId === c.id; }).reduce(function(s, t) { return s + Number(t.amount); }, 0)
+      };
+    }).filter(function(x) { return x.val > 0; }).sort(function(a, b) { return b.val - a.val; });
+
+    renderPieChart("monthlyPieContainer", items);
+
+    var maxVal = items.length ? items[0].val : 1;
+    document.getElementById("monthlyBarContainer").innerHTML = items.length
+      ? items.map(function(x, idx) {
+          var color = CHART_COLORS[idx % CHART_COLORS.length];
+          return '<div class="bar-row"><div class="bar-label">' + x.name + '</div><div class="bar-track"><div class="bar-fill" style="width:' + Math.round((x.val/maxVal)*100) + '%; background:' + color + ';"></div></div><div class="bar-val">' + fmt(x.val) + '</div></div>';
+        }).join("")
+      : '<p style="color:var(--muted); font-size:0.85rem;">אין הוצאות בחודש זה.</p>';
+  }
+
+  function buildMonthlyTable(type, month, tableId) {
+    var cats = state.categories.filter(function(c) { return c.type === type; });
+    var tbl = document.getElementById(tableId);
+    var html = '<thead><tr><th>קטגוריה</th><th>פירוט החנויות</th><th>סכום</th><th>יעד חודשי</th><th>הפרש מהיעד</th></tr></thead><tbody>';
+    var sumSpent = 0, sumTarget = 0;
+
+    if (!cats.length) {
+      html += '<tr><td colspan="5" style="color:var(--muted); text-align:center;">אין קטגוריות מוגדרות מסוג זה.</td></tr></tbody>';
+      tbl.innerHTML = html;
+      return;
+    }
+
+    cats.forEach(function(cat) {
+      var txs = state.transactions.filter(function(t) { return t.month === month && t.categoryId === cat.id; });
+      var spent = txs.reduce(function(s, t) { return s + Number(t.amount); }, 0);
+      var stores = Array.from(new Set(txs.map(function(t) { return t.merchant; }))).join(", ") || "-";
+      var diff = Number(cat.target || 0) - spent;
+      sumSpent += spent;
+      sumTarget += Number(cat.target || 0);
+
+      html += '<tr style="cursor:pointer;" data-cat-id="' + cat.id + '" data-cat-name="' + cat.name + '">' +
+        '<td style="font-weight:700;">' + cat.name + '</td>' +
+        '<td style="font-size:0.78rem; color:var(--muted); max-width:220px;">' + stores + '</td>' +
+        '<td style="font-weight:700;">' + fmt(spent) + '</td>' +
+        '<td>' + fmt(cat.target) + '</td>' +
+        '<td><span class="' + (diff >= 0 ? 'badge-ok' : 'badge-over') + '">' + fmt(diff) + '</span></td></tr>';
+    });
+
+    var totalDiff = sumTarget - sumSpent;
+    html += '<tr class="total-row"><td colspan="2">סהכ</td><td>' + fmt(sumSpent) + '</td><td>' + fmt(sumTarget) + '</td><td><span class="' + (totalDiff >= 0 ? 'badge-ok' : 'badge-over') + '">' + fmt(totalDiff) + '</span></td></tr></tbody>';
+    tbl.innerHTML = html;
+
+    tbl.querySelectorAll("tr[data-cat-id]").forEach(function(row) {
+      row.onclick = function() {
+        openDrilldown(month, this.getAttribute("data-cat-id"), this.getAttribute("data-cat-name"));
+      };
+    });
+  }
+
+  function renderInstallmentBadge(tx) {
+    if (tx && tx.isInstallment) {
+      var lbl = tx.installmentLabel ? ("תשלומים (" + tx.installmentLabel + ")") : "אחד מתוך מספר תשלומים";
+      return '<span class="badge-installment">' + lbl + '</span>';
+    }
+    return '<span class="badge-single-pay">תשלום רגיל</span>';
+  }
+
+  var currentDrilldownContext = null;
+
+  function openDrilldown(month, catId, catName) {
+    if (!month) return;
+    currentDrilldownContext = { month: month, catId: catId, catName: catName };
+    var txs = state.transactions.filter(function(t) { return t.month === month && t.categoryId === catId; });
+    document.getElementById("drilldownTitle").textContent = "פירוט עסקאות: " + catName + " (" + month + ")";
+    var tbl = document.getElementById("drilldownTable");
+    var html = '<thead><tr><th>תאריך חיוב</th><th>בית עסק</th><th>סכום</th><th>שינוי קטגוריה</th><th>מחיקה</th><th>תשלומים</th></tr></thead><tbody>';
+    txs.forEach(function(t) {
+      var opts = state.categories.map(function(c) {
+        return '<option value="' + c.id + '" ' + (c.id === t.categoryId ? 'selected' : '') + '>' + c.name + '</option>';
+      }).join("");
+      var recBadge = t.isRecurring ? '<span class="badge-recurring">הו"ק / תשלום קבוע</span>' : '';
+      var dateDisplay = t.date ? t.date : '<span style="color:var(--muted); font-size:0.78rem;">ללא תאריך מדויק (' + t.month + ')</span>';
+      html += '<tr><td>' + dateDisplay + '</td><td style="font-weight:700;">' + t.merchant + ' ' + recBadge + '</td><td>' + fmt(t.amount) + '</td><td><select data-tx-id="' + t.id + '" class="drill-cat-sel">' + opts + '</select></td><td><button type="button" data-tx-id="' + t.id + '" class="btn btn-danger drill-del-btn">מחק</button></td><td>' + renderInstallmentBadge(t) + '</td></tr>';
+    });
+    html += '</tbody>';
+    tbl.innerHTML = html;
+
+    tbl.querySelectorAll(".drill-del-btn").forEach(function(btn) {
+      btn.onclick = function() {
+        var id = btn.getAttribute("data-tx-id");
+        state.transactions = state.transactions.filter(function(x) { return String(x.id) !== id; });
+        cleanupEmptyMonths();
+        saveState();
+        renderMonthly();
+        renderAnnual();
+        renderDashboard();
+        document.getElementById("categoryDrilldown").classList.add("hidden");
+      };
+    });
+    document.getElementById("categoryDrilldown").classList.remove("hidden");
+  }
+
+  function saveDrilldownChanges() {
+    var tbl = document.getElementById("drilldownTable");
+    var changed = false;
+    tbl.querySelectorAll(".drill-cat-sel").forEach(function(sel) {
+      var tx = state.transactions.find(function(x) { return String(x.id) === sel.getAttribute("data-tx-id"); });
+      if (tx && tx.categoryId !== sel.value) {
+        tx.categoryId = sel.value;
+        learnMerchantCategory(tx.merchant, sel.value);
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveState();
+      renderMonthly();
+      renderAnnual();
+      renderDashboard();
+      if (currentDrilldownContext) {
+        openDrilldown(currentDrilldownContext.month, currentDrilldownContext.catId, currentDrilldownContext.catName);
+      }
+      alert("השינויים נשמרו בהצלחה!");
+    } else {
+      alert("לא בוצעו שינויים לשמירה.");
+    }
+  }
+
+  function renderAnnual() {
+    var cats = state.categories.filter(function(c) { return c.type === "annual"; });
+    var sumTarget = 0, sumSpent = 0;
+    var tbl = document.getElementById("annualTable");
+    var html = '<thead><tr><th>קטגוריה שנתית (לחץ לפירוט ושינוי קטגוריה)</th><th>פירוט עסקאות</th><th>יעד שנתי</th><th>ביצוע בפועל</th><th>הפרש מהיעד</th></tr></thead><tbody>';
+
+    cats.forEach(function(cat) {
+      var txs = state.transactions.filter(function(t) { return t.categoryId === cat.id; });
+      var spent = txs.reduce(function(s, t) { return s + Number(t.amount); }, 0);
+      var stores = Array.from(new Set(txs.map(function(t) { return t.merchant; }))).join(", ") || "-";
+      var diff = Number(cat.target || 0) - spent;
+      sumTarget += Number(cat.target || 0);
+      sumSpent += spent;
+
+      html += '<tr style="cursor:pointer;" data-ann-cat-id="' + cat.id + '" data-ann-cat-name="' + cat.name + '">' +
+        '<td style="font-weight:700;">' + cat.name + '</td>' +
+        '<td style="font-size:0.78rem; color:var(--muted);">' + stores + '</td>' +
+        '<td>' + fmt(cat.target) + '</td>' +
+        '<td style="font-weight:700;">' + fmt(spent) + '</td>' +
+        '<td><span class="' + (diff >= 0 ? 'badge-ok' : 'badge-over') + '">' + fmt(diff) + '</span></td></tr>';
+    });
+
+    var totalDiff = sumTarget - sumSpent;
+    html += '<tr class="total-row"><td colspan="2">סהכ שנתי</td><td>' + fmt(sumTarget) + '</td><td>' + fmt(sumSpent) + '</td><td><span class="' + (totalDiff >= 0 ? 'badge-ok' : 'badge-over') + '">' + fmt(totalDiff) + '</span></td></tr></tbody>';
+    tbl.innerHTML = html;
+
+    tbl.querySelectorAll("tr[data-ann-cat-id]").forEach(function(row) {
+      row.onclick = function() {
+        openAnnualDrilldown(this.getAttribute("data-ann-cat-id"), this.getAttribute("data-ann-cat-name"));
+      };
+    });
+
+    document.getElementById("annualKpis").innerHTML =
+      '<div class="kpi"><div class="kpi-label">סהכ יעד שנתי</div><div class="kpi-val">' + fmt(sumTarget) + '</div></div>' +
+      '<div class="kpi indigo"><div class="kpi-label">ביצוע שנתי בפועל</div><div class="kpi-val">' + fmt(sumSpent) + '</div></div>' +
+      '<div class="kpi ' + (totalDiff >= 0 ? 'ok' : 'over') + '"><div class="kpi-label">יתרה שנתית פנויה</div><div class="kpi-val" style="color:' + (totalDiff >= 0 ? '#166534' : '#991b1b') + '">' + fmt(totalDiff) + '</div></div>';
+  }
+
+  var currentAnnualDrilldownContext = null;
+
+  function openAnnualDrilldown(catId, catName) {
+    currentAnnualDrilldownContext = { catId: catId, catName: catName };
+    var txs = state.transactions.filter(function(t) { return t.categoryId === catId; });
+    document.getElementById("annualDrilldownTitle").textContent = "פירוט עסקאות שנתיות: " + catName;
+    var tbl = document.getElementById("annualDrilldownTable");
+    var html = '<thead><tr><th>חודש</th><th>תאריך</th><th>בית עסק</th><th>סכום</th><th>שינוי קטגוריה</th><th>מחיקה</th><th>תשלומים</th></tr></thead><tbody>';
+    if (!txs.length) {
+      html += '<tr><td colspan="7" style="text-align:center; color:var(--muted);">אין עסקאות בקטגוריה זו.</td></tr>';
+    } else {
+      txs.forEach(function(t) {
+        var opts = state.categories.map(function(c) {
+          return '<option value="' + c.id + '" ' + (c.id === t.categoryId ? 'selected' : '') + '>' + c.name + '</option>';
+        }).join("");
+        var dateDisplay = t.date ? t.date : '<span style="color:var(--muted); font-size:0.78rem;">ללא תאריך מדויק</span>';
+        html += '<tr><td>' + (t.month || '') + '</td><td>' + dateDisplay + '</td><td style="font-weight:700;">' + t.merchant + '</td><td>' + fmt(t.amount) + '</td><td><select data-tx-id="' + t.id + '" class="ann-drill-cat-sel">' + opts + '</select></td><td><button type="button" data-tx-id="' + t.id + '" class="btn btn-danger ann-drill-del-btn">מחק</button></td><td>' + renderInstallmentBadge(t) + '</td></tr>';
+      });
+    }
+    html += '</tbody>';
+    tbl.innerHTML = html;
+
+    tbl.querySelectorAll(".ann-drill-del-btn").forEach(function(btn) {
+      btn.onclick = function() {
+        var id = btn.getAttribute("data-tx-id");
+        state.transactions = state.transactions.filter(function(x) { return String(x.id) !== id; });
+        cleanupEmptyMonths();
+        saveState();
+        renderAnnual();
+        renderMonthly();
+        renderDashboard();
+        openAnnualDrilldown(catId, catName);
+      };
+    });
+
+    document.getElementById("annualDrilldown").classList.remove("hidden");
+  }
+
+  function saveAnnualDrilldownChanges() {
+    var tbl = document.getElementById("annualDrilldownTable");
+    var changed = false;
+    tbl.querySelectorAll(".ann-drill-cat-sel").forEach(function(sel) {
+      var tx = state.transactions.find(function(x) { return String(x.id) === sel.getAttribute("data-tx-id"); });
+      if (tx && tx.categoryId !== sel.value) {
+        tx.categoryId = sel.value;
+        learnMerchantCategory(tx.merchant, sel.value);
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveState();
+      renderAnnual();
+      renderMonthly();
+      renderDashboard();
+      if (currentAnnualDrilldownContext) {
+        openAnnualDrilldown(currentAnnualDrilldownContext.catId, currentAnnualDrilldownContext.catName);
+      }
+      alert("השינויים נשמרו בהצלחה!");
+    } else {
+      alert("לא בוצעו שינויים לשמירה.");
+    }
+  }
+
+  function getHebrewDateParts(dateObj) {
+    try {
+      var fmtHeb = new Intl.DateTimeFormat("en-u-ca-hebrew", {
+        day: "numeric",
+        month: "long",
+        year: "numeric"
+      });
+      var parts = fmtHeb.formatToParts(dateObj);
+      var hDay = 0;
+      var hMonth = "";
+      parts.forEach(function(p) {
+        if (p.type === "day") hDay = parseInt(p.value, 10);
+        if (p.type === "month") hMonth = p.value;
+      });
+      return { day: hDay, month: hMonth };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function getHebrewHolidayClothingSeason(dateObj) {
+    if (!dateObj || isNaN(dateObj.getTime())) return null;
+    var heb = getHebrewDateParts(dateObj);
+    if (heb && heb.month) {
+      var m = heb.month;
+      var d = heb.day;
+      if ((m === "Av" && d >= 15) || m === "Elul" || (m === "Tishrei" && d <= 23)) {
+        return "tishrei";
+      }
+      if (m === "Adar" || m === "Adar I" || m === "Adar II" || (m === "Nisan" && d <= 14)) {
+        return "pesach";
+      }
+      return null;
+    }
+    return null;
+  }
+
+  function detectHolidayCategory(merchant, dateObj, baseCategoryId) {
+    if (!dateObj || !state.categories.length) return { catId: baseCategoryId, isHoliday: false };
+    var mLower = String(merchant || "").toLowerCase();
+
+    var baseCat = state.categories.find(function(c) { return c.id === baseCategoryId; });
+    var clothingWords = ["פוקס", "זארה", "קסטרו", "רנואר", "שילב", "גלי", "נמרוד", "אלדו", "נעלי", "ביגוד", "אופנה", "הלבשה", "לידר", "קיווי", "קידי שיק", "טרמינל איקס"];
+    var isClothing = (baseCat && baseCat.name.indexOf("ביגוד") !== -1) || clothingWords.some(function(k) { return mLower.indexOf(k) !== -1; });
+
+    var holidayWords = ["סוכה", "סכך", "אתרוג", "לולב", "משלוחי מנות", "תחפושות", "מצות", "הגדה", "חנוכיה"];
+    var isHolidayItem = holidayWords.some(function(k) { return mLower.indexOf(k) !== -1; });
+
+    if (isHolidayItem) {
+      var holCat = state.categories.find(function(c) { return c.id === "annual_holidays"; }) || state.categories.find(function(c) { return c.type === "annual" && c.name.indexOf("חגים") !== -1; });
+      if (holCat) return { catId: holCat.id, isHoliday: true };
+    }
+
+    if (isClothing) {
+      var season = getHebrewHolidayClothingSeason(dateObj);
+      if (season === "tishrei") {
+        var tishreiCat = state.categories.find(function(c) { return c.id === "annual_clothing_tishrei"; }) || state.categories.find(function(c) { return c.type === "annual" && c.name.indexOf("תשרי") !== -1; });
+        if (tishreiCat) return { catId: tishreiCat.id, isHoliday: true };
+      }
+      if (season === "pesach") {
+        var pesachCat = state.categories.find(function(c) { return c.id === "annual_clothing_pesach"; }) || state.categories.find(function(c) { return c.type === "annual" && c.name.indexOf("פסח") !== -1; });
+        if (pesachCat) return { catId: pesachCat.id, isHoliday: true };
+      }
+    }
+
+    return { catId: baseCategoryId, isHoliday: false };
+  }
+
+  function classifyMerchantWithDetails(merchant, dateObj, isRecurring) {
+    if (!state.categories.length) return { catId: "", source: "none" };
+    var norm = normalizeMerchantName(merchant);
+
+    var baseCatId = null;
+
+    if (state.learnedMerchants && state.learnedMerchants[norm]) {
+      var learnedId = state.learnedMerchants[norm];
+      if (state.categories.some(function(c) { return c.id === learnedId; })) {
+        baseCatId = learnedId;
+      }
+    }
+    if (!baseCatId && state.learnedMerchants) {
+      var keys = Object.keys(state.learnedMerchants);
+      for (var i = 0; i < keys.length; i++) {
+        var savedName = keys[i];
+        var savedCatId = state.learnedMerchants[savedName];
+        if (savedName.length >= 3 && (norm.indexOf(savedName) !== -1 || savedName.indexOf(norm) !== -1)) {
+          if (state.categories.some(function(c) { return c.id === savedCatId; })) {
+            baseCatId = savedCatId;
+            break;
+          }
+        }
+      }
+    }
+
+    if (!baseCatId) {
+      var m = String(merchant || "").toLowerCase();
+      for (var j = 0; j < state.categories.length; j++) {
+        var cat = state.categories[j];
+        var kws = String(cat.keywords || "").split(",").map(function(k) { return k.trim().toLowerCase(); }).filter(Boolean);
+        if (kws.some(function(k) { return m.indexOf(k) !== -1; })) {
+          baseCatId = cat.id;
+          break;
+        }
+      }
+    }
+
+    if (!baseCatId) {
+      if (isRecurring) {
+        var firstFixed = state.categories.find(function(c) { return c.type === "fixed"; });
+        if (firstFixed) baseCatId = firstFixed.id;
+      }
+    }
+
+    if (!baseCatId) {
+      var gen = state.categories.find(function(c) { return c.name.indexOf("כללי") !== -1; });
+      baseCatId = gen ? gen.id : state.categories[0].id;
+    }
+
+    var holidayCheck = detectHolidayCategory(merchant, dateObj, baseCatId);
+    if (holidayCheck.isHoliday) {
+      return { catId: holidayCheck.catId, source: "holiday" };
+    }
+
+    return { catId: baseCatId, source: "keyword" };
+  }
+
+  function parseDateObj(rawVal) {
+    if (rawVal === null || rawVal === undefined || rawVal === "") return null;
+    if (typeof rawVal === "number" && rawVal > 20000 && rawVal < 70000) {
+      var utcDays = Math.floor(rawVal - 25569);
+      var d = new Date(utcDays * 86400 * 1000);
+      if (!isNaN(d.getTime())) return d;
+    }
+    var str = String(rawVal).trim();
+    if (/^\d{5}(\.\d+)?$/.test(str)) {
+      var numD = parseFloat(str);
+      if (numD > 20000 && numD < 70000) {
+        var dNum = new Date(Math.floor(numD - 25569) * 86400 * 1000);
+        if (!isNaN(dNum.getTime())) return dNum;
+      }
+    }
+    var m = str.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})/);
+    if (m) {
+      var day = parseInt(m[1], 10);
+      var month = parseInt(m[2], 10) - 1;
+      var year = parseInt(m[3], 10);
+      if (year < 100) year += 2000;
+      var d2 = new Date(year, month, day);
+      if (!isNaN(d2.getTime())) return d2;
+    }
+    var iso = str.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})/);
+    if (iso) {
+      var d3 = new Date(parseInt(iso[1], 10), parseInt(iso[2], 10) - 1, parseInt(iso[3], 10));
+      if (!isNaN(d3.getTime())) return d3;
+    }
+    return null;
+  }
+
+  function getCycleMonthLabel(dateObj, billingDay) {
+    if (!dateObj) return null;
+    var bDay = Math.max(1, Math.min(28, Number(billingDay) || 2));
+    var day = dateObj.getDate();
+    var m = dateObj.getMonth();
+    var y = dateObj.getFullYear();
+
+    if (day < bDay) {
+      m -= 1;
+      if (m < 0) {
+        m = 11;
+        y -= 1;
+      }
+    }
+    return HEBREW_MONTHS[m] + " " + y;
+  }
+
+  function formatShortDate(rawVal, dateObj) {
+    if (dateObj) {
+      var dd = String(dateObj.getDate()).padStart(2, "0");
+      var mm = String(dateObj.getMonth() + 1).padStart(2, "0");
+      var yyyy = dateObj.getFullYear();
+      return dd + "." + mm + "." + yyyy;
+    }
+    return String(rawVal || "").trim();
+  }
+
+  function isSummaryOrNoiseRow(merchant, rowCells) {
+    var m = merchant.toLowerCase();
+    var fullRow = rowCells.map(function(c) { return String(c || "").toLowerCase(); }).join(" ");
+    var blockedPhrases = [
+      "סך הכל", "סך-הכל", "סהכ",
+      "שם בית עסק", "תיאור עסקה", "תאריך עסקה", "תאריך חיוב",
+      "יתרה לתשלום", "מועד חיוב", "עסקאות בארץ", "פירוט עסקאות",
+      "מספר כרטיס", "זיכוי"
+    ];
+    return blockedPhrases.some(function(p) { return m.indexOf(p) !== -1 || fullRow.indexOf(p) !== -1; });
+  }
+
+  function detectRecurringStandingOrder(merchant, rowCells) {
+    var fullRow = (merchant + " " + rowCells.map(function(c) { return String(c || ""); }).join(" ")).toLowerCase();
+    var recurringHints = [
+      "הו\"ק", "הוק", "הוראת קבע", "חיוב קבוע", "מנוי"
+    ];
+    return recurringHints.some(function(h) { return fullRow.indexOf(h) !== -1; });
+  }
+
+  // Detects whether the transaction is one installment out of multiple payments (e.g. "תשלום 3 מתוך 12", "3/12", "עסקת תשלומים")
+  function detectInstallmentInfo(merchant, rowCells, notesColIdx) {
+    var allText = (merchant + " " + rowCells.map(function(c) { return String(c || ""); }).join(" ")).trim();
+    var notesText = (notesColIdx >= 0 && rowCells[notesColIdx] !== undefined) ? String(rowCells[notesColIdx]).trim() : "";
+    var targetText = (notesText + " " + allText).trim();
+
+    // Pattern 1: "תשלום X מתוך Y" or "X מתוך Y" where Y > 1
+    var mHebrew = targetText.match(/(?:תשלום\s*)?(\d+)\s*מתוך\s*(\d+)/);
+    if (mHebrew) {
+      var cur1 = parseInt(mHebrew[1], 10);
+      var tot1 = parseInt(mHebrew[2], 10);
+      if (tot1 > 1 && cur1 >= 1 && cur1 <= tot1) {
+        return { isInstallment: true, label: cur1 + " מתוך " + tot1 };
+      }
+    }
+
+    // Pattern 2: "X/Y" or "X \ Y" in notes or row (excluding dates like dd/mm/yyyy)
+    for (var i = 0; i < rowCells.length; i++) {
+      var cell = String(rowCells[i] || "").trim();
+      if (!cell || /^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(cell)) continue;
+      var mSlash = cell.match(/(?:^|\s|תשלום\s*)(\d{1,2})\s*[\/\\]\s*(\d{1,2})(?:\s|$)/);
+      if (mSlash) {
+        var cur2 = parseInt(mSlash[1], 10);
+        var tot2 = parseInt(mSlash[2], 10);
+        if (tot2 > 1 && tot2 <= 60 && cur2 >= 1 && cur2 <= tot2) {
+          return { isInstallment: true, label: cur2 + " מתוך " + tot2 };
+        }
+      }
+    }
+
+    // Pattern 3: explicit keyword "תשלומים" / "עסקת תשלומים"
+    if (/תשלומים/.test(targetText)) {
+      return { isInstallment: true, label: "עסקת תשלומים" };
+    }
+
+    return { isInstallment: false, label: "" };
+  }
+
+  function parseCsvLine(line, delimiter) {
+    var result = [];
+    var cur = "";
+    var inQuotes = false;
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === delimiter && !inQuotes) {
+        result.push(cur.trim());
+        cur = "";
+      } else {
+        cur += ch;
+      }
+    }
+    result.push(cur.trim());
+    return result;
+  }
+
+  function textToRows(text) {
+    var clean = text.replace(/^\uFEFF/, "");
+    if (clean.indexOf("<table") !== -1 || clean.indexOf("<TABLE") !== -1 || clean.indexOf("<tr") !== -1) {
+      var parser = new DOMParser();
+      var doc = parser.parseFromString(clean, "text/html");
+      var trs = doc.querySelectorAll("tr");
+      var htmlRows = [];
+      trs.forEach(function(tr) {
+        var cells = [];
+        tr.querySelectorAll("th, td").forEach(function(td) {
+          cells.push(td.textContent.replace(/\s+/g, " ").trim());
+        });
+        if (cells.length) htmlRows.push(cells);
+      });
+      return htmlRows;
+    }
+
+    var lines = clean.split(/\r?\n/).filter(function(l) { return l.trim().length > 0; });
+    if (!lines.length) return [];
+    var sample = lines.slice(0, 10).join("\n");
+    var delimiter = ",";
+    if ((sample.match(/\t/g) || []).length > (sample.match(/,/g) || []).length) delimiter = "\t";
+    else if ((sample.match(/;/g) || []).length > (sample.match(/,/g) || []).length) delimiter = ";";
+
+    return lines.map(function(l) { return parseCsvLine(l, delimiter); });
+  }
+
+  function applyUserCustomRules(merchant, amount, defaultCatId) {
+    var rules = state.customRules || [];
+    var mLower = String(merchant || "").toLowerCase();
+    for (var i = 0; i < rules.length; i++) {
+      var r = rules[i];
+      var kw = String(r.merchantKeyword || "").trim().toLowerCase();
+      if (!kw) continue;
+      if (mLower.indexOf(kw) !== -1) {
+        if (r.mode === "split50" && r.cat1 && r.cat2) {
+          var half1 = +(amount / 2).toFixed(2);
+          var half2 = +(amount - half1).toFixed(2);
+          return [
+            { merchant: merchant + " (חלק 1)", amount: half1, categoryId: r.cat1 },
+            { merchant: merchant + " (חלק 2)", amount: half2, categoryId: r.cat2 }
+          ];
+        } else if (r.cat1) {
+          return [
+            { merchant: merchant, amount: amount, categoryId: r.cat1 }
+          ];
+        }
+      }
+    }
+    return [
+      { merchant: merchant, amount: amount, categoryId: defaultCatId }
+    ];
+  }
+
+  function extractTransactionsFromRows(rows) {
+    var extracted = [];
+    var txDateCol = -1, chargeDateCol = -1, merchCol = -1, amtCol = -1, notesCol = -1;
+    var headerRowIdx = -1;
+    var statementBillingDateObj = null;
+
+    // 1. Scan top rows for statement billing date ("מועד חיוב" / "תאריך חיוב" / "לחיוב ב-")
+    for (var h = 0; h < Math.min(rows.length, 30); h++) {
+      var hr = rows[h] || [];
+      var joined = hr.map(function(c) { return String(c || ""); }).join(" ");
+      if (joined.indexOf("מועד חיוב") !== -1 || joined.indexOf("תאריך חיוב") !== -1 || joined.indexOf("לחיוב ב") !== -1 || joined.indexOf("חיוב לחודש") !== -1) {
+        for (var hc = 0; hc < hr.length; hc++) {
+          var dCand = parseDateObj(hr[hc]);
+          if (dCand) {
+            statementBillingDateObj = dCand;
+            break;
+          }
+          // Also check inline date inside text cell like "מועד חיוב: 10/10/2026"
+          var inlineMatch = String(hr[hc] || "").match(/(\d{1,2}[./-]\d{1,2}[./-]\d{2,4})/);
+          if (inlineMatch) {
+            var dInline = parseDateObj(inlineMatch[1]);
+            if (dInline) {
+              statementBillingDateObj = dInline;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Detect table columns
+    for (var i = 0; i < Math.min(rows.length, 40); i++) {
+      var r = rows[i] || [];
+      var rowText = r.map(function(c) { return String(c || ""); }).join(" ");
+      if (rowText.indexOf("בית עסק") !== -1 || rowText.indexOf("תיאור") !== -1 || rowText.indexOf("סכום") !== -1 || rowText.indexOf("חובה") !== -1 || rowText.indexOf("עסקה") !== -1) {
+        headerRowIdx = i;
+        r.forEach(function(cell, idx) {
+          var s = String(cell || "").trim();
+          if (s.indexOf("תאריך חיוב") !== -1 || s.indexOf("מועד חיוב") !== -1) chargeDateCol = idx;
+          else if (s.indexOf("תאריך") !== -1 && txDateCol === -1) txDateCol = idx;
+          if (s.indexOf("בית עסק") !== -1 || s.indexOf("תיאור") !== -1 || s.indexOf("שם העסק") !== -1 || s.indexOf("פעולה") !== -1) merchCol = idx;
+          if (s.indexOf("סכום חיוב") !== -1 || s.indexOf("סכום לחיוב") !== -1 || s === "סכום" || s.indexOf("חובה") !== -1 || s.indexOf("סכום עסקה") !== -1) amtCol = idx;
+          if (s.indexOf("הערות") !== -1 || s.indexOf("פירוט") !== -1 || s.indexOf("תשלומים") !== -1 || s.indexOf("אופן") !== -1) notesCol = idx;
+        });
+        break;
+      }
+    }
+
+    if (txDateCol === -1) txDateCol = 0;
+    if (merchCol === -1) merchCol = 1;
+
+    var bDay = Number(state.billingDay) || 2;
+    var startIdx = headerRowIdx >= 0 ? headerRowIdx + 1 : 0;
+
+    // 3. First pass to collect raw parsed rows and infer dominant statement cycle if statementBillingDateObj wasn't in header
+    var rawParsed = [];
+    var nonInstallmentDates = [];
+
+    for (var rowIdx = startIdx; rowIdx < rows.length; rowIdx++) {
+      var row = rows[rowIdx];
+      if (!row || row.length < 2) continue;
+
+      var merchant = String(row[merchCol] || "").trim();
+      if (!merchant || merchant.length < 2) continue;
+      if (isSummaryOrNoiseRow(merchant, row)) continue;
+
+      var txDateObj = parseDateObj(row[txDateCol]);
+      var rowChargeObj = chargeDateCol >= 0 ? parseDateObj(row[chargeDateCol]) : null;
+
+      if (!txDateObj && !rowChargeObj) {
+        for (var dc = 0; dc < row.length; dc++) {
+          if (dc === merchCol || dc === amtCol) continue;
+          var candDate = parseDateObj(row[dc]);
+          if (candDate) {
+            txDateObj = candDate;
+            break;
+          }
+        }
+      }
+
+      var amount = NaN;
+      if (amtCol >= 0 && row[amtCol] !== undefined && row[amtCol] !== "") {
+        amount = parseFloat(String(row[amtCol]).replace(/[^\d.-]/g, ""));
+      } else {
+        for (var c = row.length - 1; c >= 0; c--) {
+          if (c === merchCol || c === txDateCol || c === chargeDateCol) continue;
+          var cellStr = String(row[c] || "").trim();
+          if (/^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(cellStr)) continue;
+          var val = parseFloat(cellStr.replace(/[^\d.-]/g, ""));
+          if (!isNaN(val) && val > 0 && val < 200000) { amount = val; break; }
+        }
+      }
+
+      if (isNaN(amount) || amount <= 0) continue;
+      if (!txDateObj && !rowChargeObj && !statementBillingDateObj && headerRowIdx >= 0) continue;
+
+      var isRecurring = detectRecurringStandingOrder(merchant, row);
+      var instInfo = detectInstallmentInfo(merchant, row, notesCol);
+
+      if (!instInfo.isInstallment) {
+        var refD = rowChargeObj || txDateObj;
+        if (refD) nonInstallmentDates.push(refD);
+      }
+
+      rawParsed.push({
+        row: row,
+        merchant: merchant,
+        amount: amount,
+        txDateObj: txDateObj,
+        rowChargeObj: rowChargeObj,
+        isRecurring: isRecurring,
+        isInstallment: instInfo.isInstallment,
+        installmentLabel: instInfo.label
+      });
+    }
+
+    // Determine the dominant statement cycle month from statementBillingDateObj or latest non-installment transactions
+    var dominantCycleOrder = -1;
+    var dominantCycleLabel = null;
+    if (statementBillingDateObj) {
+      // A statement billing date (e.g. 10.10.2026) represents the cycle ending on that day, which belongs to the month before (September 2026)
+      var billProbe = new Date(statementBillingDateObj.getFullYear(), statementBillingDateObj.getMonth(), statementBillingDateObj.getDate() - 1);
+      dominantCycleLabel = getCycleMonthLabel(billProbe, bDay);
+      dominantCycleOrder = parseHebrewMonthLabelToOrder(dominantCycleLabel);
+    } else if (nonInstallmentDates.length > 0) {
+      var latestD = nonInstallmentDates.reduce(function(maxD, curD) { return curD > maxD ? curD : maxD; }, nonInstallmentDates[0]);
+      dominantCycleLabel = getCycleMonthLabel(latestD, bDay);
+      dominantCycleOrder = parseHebrewMonthLabelToOrder(dominantCycleLabel);
+    }
+
+    // 4. Finalize each transaction's month & date according to installment rules
+    rawParsed.forEach(function(item) {
+      var targetMonth = null;
+      var displayDate = "";
+      var effectiveDateForHoliday = null;
+
+      if (item.isInstallment) {
+        // Check if row has an explicit billing/charge date for this current installment
+        if (item.rowChargeObj) {
+          var chargeProbe = new Date(item.rowChargeObj.getFullYear(), item.rowChargeObj.getMonth(), item.rowChargeObj.getDate() - 1);
+          targetMonth = getCycleMonthLabel(chargeProbe, bDay);
+          displayDate = formatShortDate("", item.rowChargeObj);
+          effectiveDateForHoliday = item.rowChargeObj;
+        } else if (item.txDateObj && dominantCycleOrder !== -1) {
+          var origMonthLabel = getCycleMonthLabel(item.txDateObj, bDay);
+          var origOrder = parseHebrewMonthLabelToOrder(origMonthLabel);
+          // Only allow original date if it matches the billing month or the month immediately before it (diff 0 or 1).
+          // If original purchase was months ago (e.g. January in a September statement), place in dominant cycle month with NO misleading January date.
+          if (origOrder !== -1 && (dominantCycleOrder - origOrder === 0 || dominantCycleOrder - origOrder === 1)) {
+            targetMonth = origMonthLabel;
+            displayDate = formatShortDate("", item.txDateObj);
+            effectiveDateForHoliday = item.txDateObj;
+          } else {
+            targetMonth = dominantCycleLabel;
+            displayDate = ""; // No misleading past date (e.g., January)
+            effectiveDateForHoliday = null;
+          }
+        } else if (dominantCycleLabel) {
+          targetMonth = dominantCycleLabel;
+          displayDate = "";
+          effectiveDateForHoliday = null;
+        } else if (item.txDateObj) {
+          targetMonth = getCycleMonthLabel(item.txDateObj, bDay);
+          displayDate = formatShortDate("", item.txDateObj);
+          effectiveDateForHoliday = item.txDateObj;
+        }
+      } else {
+        // Regular single payment
+        var effD = item.rowChargeObj
+          ? new Date(item.rowChargeObj.getFullYear(), item.rowChargeObj.getMonth(), item.rowChargeObj.getDate() - 1)
+          : (item.txDateObj || statementBillingDateObj || new Date());
+        targetMonth = getCycleMonthLabel(effD, bDay);
+        displayDate = formatShortDate("", item.rowChargeObj || item.txDateObj || statementBillingDateObj);
+        effectiveDateForHoliday = item.txDateObj || item.rowChargeObj || statementBillingDateObj;
+      }
+
+      if (!targetMonth) {
+        targetMonth = dominantCycleLabel || getCycleMonthLabel(new Date(), bDay);
+      }
+
+      var classification = classifyMerchantWithDetails(item.merchant, effectiveDateForHoliday, item.isRecurring);
+      var resolvedItems = applyUserCustomRules(item.merchant, item.amount, classification.catId);
+
+      resolvedItems.forEach(function(resItem) {
+        extracted.push({
+          month: targetMonth,
+          date: displayDate,
+          merchant: resItem.merchant,
+          amount: resItem.amount,
+          categoryId: resItem.categoryId,
+          isRecurring: item.isRecurring,
+          isInstallment: item.isInstallment,
+          installmentLabel: item.installmentLabel,
+          learnedCatId: null
+        });
+      });
+    });
+
+    return extracted;
+  }
+
+  function decodeBufferSmart(buffer) {
+    var utf8Text = new TextDecoder("utf-8").decode(buffer);
+    if (utf8Text.indexOf("\uFFFD") !== -1 || (utf8Text.indexOf("תאריך") === -1 && utf8Text.indexOf("סכום") === -1 && utf8Text.indexOf("עסק") === -1)) {
+      try {
+        var win1255Text = new TextDecoder("windows-1255").decode(buffer);
+        if (win1255Text.indexOf("תאריך") !== -1 || win1255Text.indexOf("סכום") !== -1 || win1255Text.indexOf("עסק") !== -1) {
+          return win1255Text;
+        }
+      } catch (e) {}
+    }
+    return utf8Text;
+  }
+
+  function processUploadedFile(file) {
+    var statusEl = document.getElementById("uploadStatusMsg");
+    document.getElementById("previewArea").classList.add("hidden");
+    statusEl.style.color = "#0f766e";
+    statusEl.textContent = "קורא את הקובץ: " + file.name + "...";
+    pendingImportRows = [];
+    pendingFileSignature = file.name + "_" + file.size;
+
+    var fileNameLower = file.name.toLowerCase();
+
+    if (fileNameLower.endsWith(".csv") || fileNameLower.endsWith(".txt")) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          var text = decodeBufferSmart(e.target.result);
+          var rows = textToRows(text);
+          pendingImportRows = extractTransactionsFromRows(rows);
+          finishFilePreview(statusEl);
+        } catch (err) {
+          statusEl.style.color = "#b91c1c";
+          statusEl.textContent = "שגיאה בקריאת קובץ CSV: " + err.message;
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    var probeReader = new FileReader();
+    probeReader.onload = async function(e) {
+      var buf = e.target.result;
+      var headBytes = new Uint8Array(buf.slice(0, 4));
+      var isZip = (headBytes[0] === 0x50 && headBytes[1] === 0x4B);
+      var isOle = (headBytes[0] === 0xD0 && headBytes[1] === 0xCF);
+
+      if (!isZip && !isOle) {
+        try {
+          var text = decodeBufferSmart(buf);
+          var rows = textToRows(text);
+          pendingImportRows = extractTransactionsFromRows(rows);
+          finishFilePreview(statusEl);
+          return;
+        } catch (err) {}
+      }
+
+      if (isZip) {
+        try {
+          var sheetsList = await parseXlsxAllSheetsNative(buf);
+          var merged = [];
+          sheetsList.forEach(function(sheetRows) {
+            var res = extractTransactionsFromRows(sheetRows);
+            if (res.length) merged = merged.concat(res);
+          });
+          if (merged.length) {
+            pendingImportRows = merged;
+            finishFilePreview(statusEl);
+            return;
+          }
+        } catch (nativeErr) {}
+      }
+
+      ensureXlsxLoaded(function(ok) {
+        if (!ok || typeof window.XLSX === "undefined") {
+          statusEl.style.color = "#b91c1c";
+          statusEl.textContent = "לא ניתן לפתוח קובץ בפורמט זה ברשת הנוכחית. פתח את הקובץ באקסל, בחר 'שמירה בשם' -> סוג קובץ CSV (מופרד בפסיקים), והעלה את קובץ ה-CSV כאן.";
+          return;
+        }
+        try {
+          var data = new Uint8Array(buf);
+          var workbook = window.XLSX.read(data, { type: "array" });
+          var mergedSjs = [];
+          workbook.SheetNames.forEach(function(sName) {
+            var sheet = workbook.Sheets[sName];
+            var rows = window.XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            var res = extractTransactionsFromRows(rows);
+            if (res.length) mergedSjs = mergedSjs.concat(res);
+          });
+          pendingImportRows = mergedSjs;
+          finishFilePreview(statusEl);
+        } catch (err) {
+          statusEl.style.color = "#b91c1c";
+          statusEl.textContent = "שגיאה בקריאת קובץ האקסל (" + err.message + "). שמור אותו באקסל כ-CSV והעלה כאן.";
+        }
+      });
+    };
+    probeReader.readAsArrayBuffer(file);
+  }
+
+  function finishFilePreview(statusEl) {
+    if (!pendingImportRows.length) {
+      statusEl.style.color = "#b91c1c";
+      statusEl.textContent = "הקובץ נקרא אך לא זוהו בו שורות עסקאות עם תאריך, שם בית עסק וסכום. ודא שבחרת גיליון פירוט עסקאות תקין.";
+      return;
+    }
+
+    if (state.uploadedFileSignatures && state.uploadedFileSignatures.indexOf(pendingFileSignature) !== -1) {
+      pendingImportRows = [];
+      pendingFileSignature = "";
+      statusEl.style.color = "#b91c1c";
+      statusEl.textContent = "קובץ זה כבר הועלה לאתר";
+      return;
+    }
+
+    var existingCounts = {};
+    (state.transactions || []).forEach(function(existing) {
+      var dStr = String(existing.date || existing.month || "").trim();
+      var mStr = normalizeMerchantName(existing.merchant);
+      var amtStr = Number(existing.amount || 0).toFixed(2);
+      var key = dStr + "|" + mStr + "|" + amtStr;
+      existingCounts[key] = (existingCounts[key] || 0) + 1;
+    });
+
+    var uniqueNewRows = [];
+    var skippedDuplicateCount = 0;
+
+    pendingImportRows.forEach(function(row) {
+      var dStr = String(row.date || row.month || "").trim();
+      var mStr = normalizeMerchantName(row.merchant);
+      var amtStr = Number(row.amount || 0).toFixed(2);
+      var key = dStr + "|" + mStr + "|" + amtStr;
+      if (existingCounts[key] && existingCounts[key] > 0) {
+        existingCounts[key] -= 1;
+        skippedDuplicateCount++;
+      } else {
+        uniqueNewRows.push(row);
+      }
+    });
+
+    if (uniqueNewRows.length === 0) {
+      pendingImportRows = [];
+      pendingFileSignature = "";
+      statusEl.style.color = "#b91c1c";
+      statusEl.textContent = "קובץ זה כבר הועלה לאתר";
+      return;
+    }
+
+    pendingImportRows = uniqueNewRows;
+
+    if (skippedDuplicateCount > 0) {
+      statusEl.style.color = "#0f766e";
+      statusEl.textContent = "שים לב: סוננו אוטומטית " + skippedDuplicateCount + " הוצאות שכבר הוכנסו בעבר למערכת, ומוצגות כעת רק " + uniqueNewRows.length + " ההוצאות החדשות.";
+    } else {
+      statusEl.textContent = "";
+    }
+
+    renderPreviewTable();
+  }
+
+  function renderPreviewTable() {
+    document.getElementById("previewArea").classList.remove("hidden");
+    var total = pendingImportRows.reduce(function(s, r) { return s + r.amount; }, 0);
+    var detectedMonths = Array.from(new Set(pendingImportRows.map(function(r) { return r.month; }))).join(", ");
+    document.getElementById("previewSummary").textContent = "זוהו " + pendingImportRows.length + " עסקאות חדשות (סהכ " + fmt(total) + ") • ישויך לחודש: " + detectedMonths;
+
+    var tbl = document.getElementById("previewTable");
+    var html = '<thead><tr><th>חודש משויך</th><th>תאריך חיוב</th><th>בית עסק</th><th>סכום</th><th>קטגוריה</th><th>הסרה</th><th>תשלומים</th></tr></thead><tbody>';
+    pendingImportRows.forEach(function(row, idx) {
+      var opts = state.categories.length
+        ? state.categories.map(function(c) { return '<option value="' + c.id + '" ' + (c.id === row.categoryId ? 'selected' : '') + '>' + c.name + '</option>'; }).join("")
+        : '<option value="">הגדר קטגוריות בהגדרות</option>';
+
+      var recBadge = row.isRecurring ? '<span class="badge-recurring">הו"ק / קבוע</span>' : '';
+      var dateCell = row.date ? row.date : '<span style="color:var(--muted); font-size:0.78rem;">ללא תאריך מדויק (' + row.month + ')</span>';
+
+      html += '<tr>' +
+        '<td><input type="text" data-idx="' + idx + '" class="prev-month-inp" value="' + row.month + '" style="width:125px; font-weight:700;" /></td>' +
+        '<td>' + dateCell + '</td>' +
+        '<td style="font-weight:700;">' + row.merchant + ' ' + recBadge + '</td>' +
+        '<td>' + fmt(row.amount) + '</td>' +
+        '<td><select data-idx="' + idx + '" class="prev-cat-sel">' + opts + '</select></td>' +
+        '<td><button type="button" data-idx="' + idx + '" class="btn btn-danger prev-del-btn">הסר</button></td>' +
+        '<td>' + renderInstallmentBadge(row) + '</td></tr>';
+    });
+    html += '</tbody>';
+    tbl.innerHTML = html;
+
+    tbl.querySelectorAll(".prev-month-inp").forEach(function(inp) {
+      inp.onchange = function() {
+        pendingImportRows[Number(inp.getAttribute("data-idx"))].month = inp.value;
+      };
+    });
+    tbl.querySelectorAll(".prev-cat-sel").forEach(function(sel) {
+      sel.onchange = function() {
+        var idx = Number(sel.getAttribute("data-idx"));
+        var newCatId = sel.value;
+        pendingImportRows[idx].categoryId = newCatId;
+        pendingImportRows[idx].learnedCatId = newCatId;
+      };
+    });
+    tbl.querySelectorAll(".prev-del-btn").forEach(function(btn) {
+      btn.onclick = function() {
+        pendingImportRows.splice(Number(btn.getAttribute("data-idx")), 1);
+        renderPreviewTable();
+      };
+    });
+  }
+
+  function confirmImportedRows() {
+    if (!state.categories.length) {
+      alert("שים לב: טרם הגדרת קטגוריות במרחב האישי שלך. עבור קודם ללשונית הגדרות קטגוריות ויעדים או טען תבנית קטגוריות.");
+      return;
+    }
+    var bDay = Number(state.billingDay) || 2;
+    var lastMonth = "";
+
+    pendingImportRows.forEach(function(r) {
+      var m = (r.month || "").trim();
+      if (!m) {
+        var dObj = parseDateObj(r.date) || new Date();
+        m = getCycleMonthLabel(dObj, bDay);
+      }
+      if (state.months.indexOf(m) === -1) {
+        state.months.push(m);
+      }
+      if (r.learnedCatId) {
+        learnMerchantCategory(r.merchant, r.learnedCatId);
+      }
+      lastMonth = m;
+      state.transactions.push({
+        id: Date.now() + Math.random(),
+        month: m,
+        date: r.date || "",
+        merchant: r.merchant,
+        amount: r.amount,
+        isRecurring: !!r.isRecurring,
+        isInstallment: !!r.isInstallment,
+        installmentLabel: r.installmentLabel || "",
+        categoryId: r.categoryId || state.categories[0].id
+      });
+    });
+
+    if (pendingFileSignature) {
+      if (!Array.isArray(state.uploadedFileSignatures)) state.uploadedFileSignatures = [];
+      if (state.uploadedFileSignatures.indexOf(pendingFileSignature) === -1) {
+        state.uploadedFileSignatures.push(pendingFileSignature);
+      }
+      pendingFileSignature = "";
+    }
+
+    pendingImportRows = [];
+    document.getElementById("previewArea").classList.add("hidden");
+    saveState();
+    switchTab("monthly");
+    if (lastMonth) {
+      document.getElementById("monthSelector").value = lastMonth;
+      renderMonthly();
+    }
+  }
+
+  function renderSettings() {
+    document.getElementById("familyNameInput").value = state.title;
+    syncSettingsBillingDay();
+
+    var tbl = document.getElementById("categoriesSettingsTable");
+    var html = '<thead><tr><th>שם קטגוריה</th><th>סוג</th><th>יעד (₪)</th><th>מילות מפתח לזיהוי אוטומטי</th><th>מחיקה</th></tr></thead><tbody>';
+    if (!draftCategories.length) {
+      html += '<tr><td colspan="5" style="text-align:center; color:var(--muted);">אין קטגוריות עדיין. לחץ על + הוסף קטגוריה חדשה או טען תבנית קטגוריות בסיסית, ולאחר מכן לחץ על שמור שינויים.</td></tr>';
+    } else {
+      draftCategories.forEach(function(c, idx) {
+        html += '<tr>' +
+          '<td><input type="text" data-idx="' + idx + '" class="set-name" value="' + c.name + '" style="width:100%; font-weight:700;" /></td>' +
+          '<td><select data-idx="' + idx + '" class="set-type">' +
+            '<option value="variable" ' + (c.type === 'variable' ? 'selected' : '') + '>משתנה (חודשי)</option>' +
+            '<option value="fixed" ' + (c.type === 'fixed' ? 'selected' : '') + '>קבועה (חודשי)</option>' +
+            '<option value="annual" ' + (c.type === 'annual' ? 'selected' : '') + '>שנתי / חגים</option>' +
+          '</select></td>' +
+          '<td><input type="number" data-idx="' + idx + '" class="set-target" value="' + c.target + '" style="width:100px;" /></td>' +
+          '<td><input type="text" data-idx="' + idx + '" class="set-kw" value="' + (c.keywords || '') + '" style="width:100%;" /></td>' +
+          '<td><button type="button" data-idx="' + idx + '" class="btn btn-danger set-del">מחק</button></td></tr>';
+      });
+    }
+    html += '</tbody>';
+    tbl.innerHTML = html;
+
+    tbl.querySelectorAll(".set-name").forEach(function(el) {
+      el.oninput = function() { draftCategories[Number(el.getAttribute("data-idx"))].name = el.value; };
+    });
+    tbl.querySelectorAll(".set-type").forEach(function(el) {
+      el.onchange = function() { draftCategories[Number(el.getAttribute("data-idx"))].type = el.value; };
+    });
+    tbl.querySelectorAll(".set-target").forEach(function(el) {
+      el.oninput = function() { draftCategories[Number(el.getAttribute("data-idx"))].target = Number(el.value); };
+    });
+    tbl.querySelectorAll(".set-kw").forEach(function(el) {
+      el.oninput = function() { draftCategories[Number(el.getAttribute("data-idx"))].keywords = el.value; };
+    });
+    tbl.querySelectorAll(".set-del").forEach(function(el) {
+      el.onclick = function() { draftCategories.splice(Number(el.getAttribute("data-idx")), 1); renderSettings(); };
+    });
+
+    var rTbl = document.getElementById("customRulesTable");
+    var rHtml = '<thead><tr><th>שם בית עסק / מילת מפתח</th><th>אופן פעולה</th><th>קטגוריה ראשונה (50% או 100%)</th><th>קטגוריה שנייה (בפיצול חצי-חצי)</th><th>מחיקה</th></tr></thead><tbody>';
+    if (!draftCustomRules.length) {
+      rHtml += '<tr><td colspan="5" style="text-align:center; color:var(--muted);">אין כללים אישיים מוגדרים. לחץ על "+ הוסף כלל אישי" כדי להגדיר בקשה חופשית (למשל פיצול חצי-חצי לבית עסק מסוים) ולחץ על "שמור שינויים".</td></tr>';
+    } else {
+      var catOptionsForRules = draftCategories.length
+        ? draftCategories.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join("")
+        : '<option value="">הגדר קודם קטגוריות</option>';
+
+      draftCustomRules.forEach(function(rule, idx) {
+        var opts1 = draftCategories.map(function(c) {
+          return '<option value="' + c.id + '" ' + (c.id === rule.cat1 ? 'selected' : '') + '>' + c.name + '</option>';
+        }).join("") || catOptionsForRules;
+
+        var opts2 = draftCategories.map(function(c) {
+          return '<option value="' + c.id + '" ' + (c.id === rule.cat2 ? 'selected' : '') + '>' + c.name + '</option>';
+        }).join("") || catOptionsForRules;
+
+        rHtml += '<tr>' +
+          '<td><input type="text" data-idx="' + idx + '" class="rule-kw" value="' + (rule.merchantKeyword || '') + '" placeholder="לדוגמה: שם חנות..." style="width:100%; font-weight:700;" /></td>' +
+          '<td><select data-idx="' + idx + '" class="rule-mode">' +
+            '<option value="split50" ' + (rule.mode === 'split50' ? 'selected' : '') + '>פיצול חצי-חצי (50% / 50%)</option>' +
+            '<option value="single" ' + (rule.mode === 'single' ? 'selected' : '') + '>שיוך מלא לקטגוריה אחת (100%)</option>' +
+          '</select></td>' +
+          '<td><select data-idx="' + idx + '" class="rule-cat1">' + opts1 + '</select></td>' +
+          '<td><select data-idx="' + idx + '" class="rule-cat2" ' + (rule.mode === 'single' ? 'disabled' : '') + '>' + opts2 + '</select></td>' +
+          '<td><button type="button" data-idx="' + idx + '" class="btn btn-danger rule-del">מחק</button></td></tr>';
+      });
+    }
+    rHtml += '</tbody>';
+    rTbl.innerHTML = rHtml;
+
+    rTbl.querySelectorAll(".rule-kw").forEach(function(el) {
+      el.oninput = function() { draftCustomRules[Number(el.getAttribute("data-idx"))].merchantKeyword = el.value; };
+    });
+    rTbl.querySelectorAll(".rule-mode").forEach(function(el) {
+      el.onchange = function() {
+        draftCustomRules[Number(el.getAttribute("data-idx"))].mode = el.value;
+        renderSettings();
+      };
+    });
+    rTbl.querySelectorAll(".rule-cat1").forEach(function(el) {
+      el.onchange = function() { draftCustomRules[Number(el.getAttribute("data-idx"))].cat1 = el.value; };
+    });
+    rTbl.querySelectorAll(".rule-cat2").forEach(function(el) {
+      el.onchange = function() { draftCustomRules[Number(el.getAttribute("data-idx"))].cat2 = el.value; };
+    });
+    rTbl.querySelectorAll(".rule-del").forEach(function(el) {
+      el.onclick = function() { draftCustomRules.splice(Number(el.getAttribute("data-idx")), 1); renderSettings(); };
+    });
+
+    var lTbl = document.getElementById("learnedMerchantsTable");
+    var entries = Object.keys(draftLearnedMerchants || {});
+    var lHtml = '<thead><tr><th>שם בית עסק שנלמד</th><th>קטגוריה משויכת</th><th>הסרה מהזיכרון</th></tr></thead><tbody>';
+    if (!entries.length) {
+      lHtml += '<tr><td colspan="3" style="text-align:center; color:var(--muted);">טרם נשמרו התאמות מיוחדות. ברגע שתשנה קטגוריה לבית עסק ותשמור, הוא יופיע כאן.</td></tr>';
+    } else {
+      entries.forEach(function(mKey) {
+        var cId = draftLearnedMerchants[mKey];
+        var catObj = draftCategories.find(function(c) { return c.id === cId; }) || state.categories.find(function(c) { return c.id === cId; });
+        lHtml += '<tr><td style="font-weight:700;">' + mKey + '</td><td>' + (catObj ? catObj.name : 'קטגוריה הוסרה') + '</td><td><button type="button" data-mkey="' + mKey + '" class="btn btn-danger del-learned-btn">הסר</button></td></tr>';
+      });
+    }
+    lHtml += '</tbody>';
+    lTbl.innerHTML = lHtml;
+    lTbl.querySelectorAll(".del-learned-btn").forEach(function(btn) {
+      btn.onclick = function() {
+        delete draftLearnedMerchants[btn.getAttribute("data-mkey")];
+        renderSettings();
+      };
+    });
+  }
+
+  function loadStarterCategoriesToDraft() {
+    draftCategories = JSON.parse(JSON.stringify(STARTER_CATEGORIES));
+    if (document.getElementById("view-settings").classList.contains("hidden")) {
+      state.categories = JSON.parse(JSON.stringify(STARTER_CATEGORIES));
+      saveState();
+      switchTab("settings");
+    } else {
+      renderSettings();
+      alert("תבנית הקטגוריות הבסיסית נטענה לטבלה. לחץ על 'שמור שינויים' כדי לשמור אותה סופית.");
+    }
+  }
+
+  function openAddTxModal(isAnnual) {
+    if (!state.categories.length) {
+      alert("אנא הגדר קודם קטגוריות בלשונית הגדרות קטגוריות ויעדים.");
+      return;
+    }
+    var sortedMonths = getSortedMonthsDesc();
+    document.getElementById("mTxMonth").value = document.getElementById("monthSelector").value || sortedMonths[0] || "";
+    document.getElementById("mTxMerchant").value = "";
+    document.getElementById("mTxAmount").value = "";
+    var cats = isAnnual ? state.categories.filter(function(c) { return c.type === "annual"; }) : state.categories;
+    document.getElementById("mTxCategory").innerHTML = cats.map(function(c) { return '<option value="' + c.id + '">' + c.name + '</option>'; }).join("");
+    document.getElementById("txModal").classList.remove("hidden");
+  }
+
+  function initApp() {
+    var loginForm = document.getElementById("loginForm");
+    if (loginForm) {
+      loginForm.addEventListener("submit", doTakzivLogin);
+    }
+    var loginBtn = document.getElementById("loginSubmitBtn");
+    if (loginBtn) {
+      loginBtn.addEventListener("click", doTakzivLogin);
+    }
+
+    document.getElementById("btnLogout").onclick = logoutUser;
+
+    document.querySelectorAll(".tab-btn").forEach(function(btn) {
+      btn.onclick = function() {
+        switchTab(btn.getAttribute("data-tab"));
+      };
+    });
+
+    document.getElementById("btnReset").onclick = function() {
+      if (confirm("האם למחוק את כל הנתונים והקטגוריות במרחב האישי שלך ולהתחיל מדף חלק?")) {
+        var keepPw = state ? state.password : "";
+        state = createCleanUserState(keepPw);
+        saveState();
+        switchTab("dashboard");
+      }
+    };
+
+    document.getElementById("btnBackup").onclick = function() {
+      var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "budget-backup-" + currentUserEmail + ".json";
+      a.click();
+    };
+
+    document.getElementById("btnRestore").onclick = function() {
+      document.getElementById("backupInput").click();
+    };
+
+    document.getElementById("backupInput").onchange = function(event) {
+      var file = event.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var keepPw = state ? state.password : "";
+        state = JSON.parse(e.target.result);
+        if (!state.password) state.password = keepPw;
+        if (!state.learnedMerchants) state.learnedMerchants = {};
+        if (!state.customRules) state.customRules = [];
+        if (!state.uploadedFileSignatures) state.uploadedFileSignatures = [];
+        if (!state.billingDay) state.billingDay = 2;
+        cleanupEmptyMonths();
+        saveState();
+        switchTab("dashboard");
+      };
+      reader.readAsText(file);
+    };
+
+    document.getElementById("btnExportExcel").onclick = function() {
+      ensureXlsxLoaded(function(ok) {
+        if (!ok || typeof window.XLSX === "undefined") {
+          alert("ייצוא אקסל דורש גישה לספריית XLSX. ניתן להשתמש בכפתור 'גיבוי נתונים' לשמירת הקובץ.");
+          return;
+        }
+        var wb = window.XLSX.utils.book_new();
+        getSortedMonthsDesc().forEach(function(m) {
+          var rows = [["קטגוריה", "פירוט החנויות", "סכום", "יעד חודשי", "הפרש מהיעד"]];
+          state.categories.filter(function(c) { return c.type !== "annual"; }).forEach(function(cat) {
+            var txs = state.transactions.filter(function(t) { return t.month === m && t.categoryId === cat.id; });
+            var spent = txs.reduce(function(s, t) { return s + Number(t.amount); }, 0);
+            var stores = Array.from(new Set(txs.map(function(t) { return t.merchant; }))).join(", ");
+            rows.push([cat.name, stores, spent, cat.target, cat.target - spent]);
+          });
+          window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.aoa_to_sheet(rows), m.substring(0, 30));
+        });
+
+        var annRows = [["קטגוריה שנתית", "פירוט", "יעד שנתי", "ביצוע בפועל", "הפרש מהיעד"]];
+        state.categories.filter(function(c) { return c.type === "annual"; }).forEach(function(cat) {
+          var txs = state.transactions.filter(function(t) { return t.categoryId === cat.id; });
+          var spent = txs.reduce(function(s, t) { return s + Number(t.amount); }, 0);
+          var stores = Array.from(new Set(txs.map(function(t) { return t.merchant; }))).join(", ");
+          annRows.push([cat.name, stores, cat.target, spent, cat.target - spent]);
+        });
+        window.XLSX.utils.book_append_sheet(wb, window.XLSX.utils.aoa_to_sheet(annRows), "הוצאות שנתיות");
+        window.XLSX.writeFile(wb, "ניהול_תקציב_אישי.xlsx");
+      });
+    };
+
+    document.getElementById("btnGoSettings").onclick = function() { switchTab("settings"); };
+    document.getElementById("btnLoadStarterBanner").onclick = loadStarterCategoriesToDraft;
+    document.getElementById("btnLoadStarterSettings").onclick = loadStarterCategoriesToDraft;
+
+    document.getElementById("monthSelector").onchange = function() {
+      document.getElementById("categoryDrilldown").classList.add("hidden");
+      renderMonthly();
+    };
+
+    document.getElementById("btnAddMonth").onclick = function() {
+      var m = prompt("הכנס שם חודש (לדוגמה: נובמבר 2026):");
+      if (m && m.trim()) {
+        var cleanM = m.trim();
+        var sel = document.getElementById("monthSelector");
+        var opt = document.createElement("option");
+        opt.value = cleanM;
+        opt.textContent = cleanM;
+        opt.selected = true;
+        sel.insertBefore(opt, sel.firstChild);
+        buildMonthlyTable("variable", cleanM, "monthlyVarTable");
+        buildMonthlyTable("fixed", cleanM, "monthlyFixedTable");
+        renderMonthlyCharts(cleanM);
+      }
+    };
+
+    document.getElementById("btnClearCurrentMonth").onclick = function() {
+      var activeMonth = document.getElementById("monthSelector").value;
+      if (!activeMonth) {
+        alert("לא נבחר חודש לניקוי.");
+        return;
+      }
+      if (confirm("האם למחוק את כל ההוצאות של חודש " + activeMonth + " בלבד ולהסיר חודש ריק זה מהרשימה? (היעדים ושאר החודשים יישמרו)")) {
+        state.transactions = state.transactions.filter(function(t) { return t.month !== activeMonth; });
+        state.months = state.months.filter(function(m) { return m !== activeMonth; });
+        cleanupEmptyMonths();
+        state.uploadedFileSignatures = [];
+        saveState();
+        document.getElementById("categoryDrilldown").classList.add("hidden");
+        renderMonthly();
+        renderAnnual();
+        renderDashboard();
+      }
+    };
+
+    document.getElementById("btnAddMonthlyTx").onclick = function() { openAddTxModal(false); };
+    document.getElementById("btnAddAnnualTx").onclick = function() { openAddTxModal(true); };
+
+    document.getElementById("btnSaveDrilldownChanges").onclick = saveDrilldownChanges;
+    document.getElementById("btnCloseDrilldown").onclick = function() {
+      document.getElementById("categoryDrilldown").classList.add("hidden");
+    };
+
+    document.getElementById("btnSaveAnnualDrilldownChanges").onclick = saveAnnualDrilldownChanges;
+    document.getElementById("btnCloseAnnualDrilldown").onclick = function() {
+      document.getElementById("annualDrilldown").classList.add("hidden");
+    };
+
+    document.getElementById("btnSaveBillingDay").onclick = function() {
+      var val = Number(document.getElementById("settingsBillingDayInput").value) || 2;
+      state.billingDay = Math.max(1, Math.min(28, val));
+      saveState();
+      syncSettingsBillingDay();
+      alert("השינויים נשמרו! יום החיוב החודשי: " + state.billingDay + " בחודש.");
+    };
+
+    document.getElementById("btnSavePassword").onclick = function() {
+      var newPw = document.getElementById("settingsNewPasswordInput").value.trim();
+      if (!newPw) {
+        alert("אנא הזן קוד חדש.");
+        return;
+      }
+      state.password = newPw;
+      saveState();
+      document.getElementById("settingsNewPasswordInput").value = "";
+      alert("השינויים נשמרו! הקוד עודכן בהצלחה.");
+    };
+
+    document.getElementById("btnChooseFile").onclick = function() {
+      document.getElementById("fileInput").click();
+    };
+    var dropZone = document.getElementById("dropZone");
+    dropZone.onclick = function() { document.getElementById("fileInput").click(); };
+    dropZone.ondragover = function(e) { e.preventDefault(); dropZone.classList.add("dragover"); };
+    dropZone.ondragleave = function() { dropZone.classList.remove("dragover"); };
+    dropZone.ondrop = function(e) {
+      e.preventDefault();
+      dropZone.classList.remove("dragover");
+      if (e.dataTransfer.files && e.dataTransfer.files[0]) processUploadedFile(e.dataTransfer.files[0]);
+    };
+    document.getElementById("fileInput").onchange = function(event) {
+      if (event.target.files && event.target.files[0]) {
+        processUploadedFile(event.target.files[0]);
+        event.target.value = "";
+      }
+    };
+    document.getElementById("btnConfirmImport").onclick = confirmImportedRows;
+
+    document.getElementById("btnSaveTitle").onclick = function() {
+      state.title = document.getElementById("familyNameInput").value.trim() || "ניהול תקציב ומעקב הוצאות";
+      saveKnownUser(currentUserEmail, state.title);
+      saveState();
+      document.getElementById("appTitle").textContent = state.title;
+      alert("השינויים נשמרו!");
+    };
+
+    document.getElementById("btnAddCat").onclick = function() {
+      draftCategories.push({ id: "cat_" + Date.now(), name: "קטגוריה חדשה", type: "variable", target: 0, keywords: "" });
+      renderSettings();
+    };
+
+    document.getElementById("btnSaveCategoriesSettings").onclick = function() {
+      state.categories = JSON.parse(JSON.stringify(draftCategories));
+      saveState();
+      renderSettings();
+      alert("כל השינויים בקטגוריות וביעדים נשמרו בהצלחה!");
+    };
+
+    document.getElementById("btnAddCustomRule").onclick = function() {
+      var defCat1 = draftCategories.length ? draftCategories[0].id : "";
+      var defCat2 = draftCategories.length > 1 ? draftCategories[1].id : defCat1;
+      draftCustomRules.push({
+        id: "rule_" + Date.now(),
+        merchantKeyword: "",
+        mode: "split50",
+        cat1: defCat1,
+        cat2: defCat2
+      });
+      renderSettings();
+    };
+
+    document.getElementById("btnSaveCustomRules").onclick = function() {
+      state.customRules = JSON.parse(JSON.stringify(draftCustomRules));
+      saveState();
+      renderSettings();
+      alert("הכללים האישיים נשמרו בהצלחה!");
+    };
+
+    document.getElementById("btnSaveLearnedMerchants").onclick = function() {
+      state.learnedMerchants = JSON.parse(JSON.stringify(draftLearnedMerchants));
+      saveState();
+      renderSettings();
+      alert("שינויי הזיכרון נשמרו בהצלחה!");
+    };
+
+    document.getElementById("btnCancelTx").onclick = function() {
+      document.getElementById("txModal").classList.add("hidden");
+    };
+
+    document.getElementById("btnSaveTx").onclick = function() {
+      var month = document.getElementById("mTxMonth").value.trim() || "חודש כללי";
+      var merchant = document.getElementById("mTxMerchant").value.trim();
+      var amount = parseFloat(document.getElementById("mTxAmount").value);
+      var categoryId = document.getElementById("mTxCategory").value;
+      if (!merchant || isNaN(amount)) return;
+      if (state.months.indexOf(month) === -1) state.months.push(month);
+      learnMerchantCategory(merchant, categoryId);
+      state.transactions.push({
+        id: Date.now(),
+        month: month,
+        date: new Date().toLocaleDateString("he-IL"),
+        merchant: merchant,
+        amount: amount,
+        isInstallment: false,
+        installmentLabel: "",
+        categoryId: categoryId
+      });
+      saveState();
+      document.getElementById("txModal").classList.add("hidden");
+      renderMonthly();
+      renderAnnual();
+      renderDashboard();
+    };
+
+    renderSavedProfiles();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initApp);
+  } else {
+    initApp();
+  }
+})();
+</script>
+</body>
+</html>
